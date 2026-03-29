@@ -1,0 +1,46 @@
+{
+  "pce": {
+    "sizes_tested": [
+      4,
+      6,
+      8,
+      10,
+      12
+    ],
+    "pauli_terms": [
+      8,
+      28,
+      23,
+      79,
+      108
+    ],
+    "sparsity": [
+      0.5,
+      0.4375,
+      0.359375,
+      0.30859375,
+      0.421875
+    ],
+    "trotter_error_r10": [
+      0.029564898340010196,
+      0.04686535266183639,
+      0.04975379798778896,
+      0.08014950550848741,
+      0.12330537025032685
+    ]
+  },
+  "vpe": {
+    "accuracy": "3/3",
+    "avg_circuit_depth_vpe": 17.0,
+    "avg_circuit_depth_qpe": 202.66666666666666,
+    "depth_reduction": 11.92156862745098
+  },
+  "takens": {
+    "series_length": 500,
+    "optimal_tau": 13,
+    "optimal_dim": 3,
+    "n_embedded_points": 474,
+    "sw_dimension": 12,
+    "sw_n_points": 123
+  }
+}

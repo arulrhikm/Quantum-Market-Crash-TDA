@@ -1,0 +1,69 @@
+{
+  "benchmark": [
+    {
+      "n_pts": 5,
+      "n_k_simplices": 5,
+      "laplacian_size": 5,
+      "epsilon": 1.351906080272688,
+      "beta_classical": 1,
+      "quantum_mean": 1.6,
+      "quantum_std": 0.5163977794943223,
+      "quantum_abs_error": 0.6000000000000001,
+      "quantum_rel_error": 0.6000000000000001,
+      "classical_time": 0.0007451629999764009,
+      "quantum_time_per_run": 0.009575687099999185,
+      "n_repetitions": 10,
+      "q_prec": 5
+    },
+    {
+      "n_pts": 8,
+      "n_k_simplices": 8,
+      "laplacian_size": 8,
+      "epsilon": 0.8801718944397064,
+      "beta_classical": 1,
+      "quantum_mean": 2.1,
+      "quantum_std": 0.5676462121975466,
+      "quantum_abs_error": 1.1,
+      "quantum_rel_error": 1.1,
+      "classical_time": 0.0002865729999825817,
+      "quantum_time_per_run": 0.014708391599998549,
+      "n_repetitions": 10,
+      "q_prec": 5
+    },
+    {
+      "n_pts": 12,
+      "n_k_simplices": 12,
+      "laplacian_size": 12,
+      "epsilon": 0.5952838037357977,
+      "beta_classical": 1,
+      "quantum_mean": 3.4,
+      "quantum_std": 0.9660917830792958,
+      "quantum_abs_error": 2.4,
+      "quantum_rel_error": 2.4,
+      "classical_time": 0.0003308469999865338,
+      "quantum_time_per_run": 0.02512251619999688,
+      "n_repetitions": 10,
+      "q_prec": 5
+    }
+  ],
+  "financial": {
+    "n_windows": 73,
+    "n_crashes": 0,
+    "threshold_90": 0.0,
+    "mean_beta1": 45.0,
+    "std_beta1": 0.0
+  },
+  "claim_validation": {
+    "original_title": "Quantum Computation of Topological Invariants for Financial Time-Series Analysis",
+    "verdict": "PARTIALLY JUSTIFIED \u2014 with necessary qualification",
+    "justification": "The title is mathematically legitimate IF properly scoped:\n(+) Topological invariants (Betti numbers) ARE computed.\n(+) Financial time-series data IS analyzed.\n(+) A quantum algorithm (QPE) IS used for the computation.\n(-) The quantum computation is SIMULATED classically, not run on\n    actual quantum hardware.\n(-) No quantum speedup is demonstrated \u2014 the simulation is slower.\n(-) The original QPE method (p(0)*2^q) was mathematically incorrect.\n",
+    "corrected_title": "Simulated Quantum Phase Estimation for Betti Number Computation in Financial Time-Series Topological Analysis",
+    "corrected_title_rationale": "The word \"Simulated\" is essential for academic honesty. \"Phase Estimation for Betti Number Computation\" is more precise than \"Computation of Topological Invariants\" since we specifically use QPE on the Laplacian spectrum, and Betti numbers are the specific invariant being estimated."
+  },
+  "figures": [
+    "/home/claude/MSEF_project/figure1_benchmark.png",
+    "/home/claude/MSEF_project/figure2_financial.png",
+    "/home/claude/MSEF_project/figure3_qpe_diagnostic.png",
+    "/home/claude/MSEF_project/figure4_complexity.png"
+  ]
+}

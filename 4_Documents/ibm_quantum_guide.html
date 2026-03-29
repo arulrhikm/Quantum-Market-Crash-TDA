@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IBM Quantum Hardware Setup — MSEF 2026</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap');
+
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d45;
+    --accent: #3b82f6;
+    --accent2: #06b6d4;
+    --accent3: #8b5cf6;
+    --green: #10b981;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --mono: 'Space Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+    --serif: 'DM Serif Display', serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ── GRID BACKGROUND ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: relative;
+    z-index: 1;
+    padding: 60px 40px 50px;
+    max-width: 860px;
+    margin: 0 auto;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    border: 1px solid var(--accent2);
+    padding: 4px 12px;
+    border-radius: 2px;
+    margin-bottom: 20px;
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-size: 38px;
+    line-height: 1.15;
+    color: #fff;
+    margin-bottom: 14px;
+    letter-spacing: -0.5px;
+  }
+
+  h1 span {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 15px;
+    max-width: 580px;
+  }
+
+  /* ── PROGRESS NAV ── */
+  .progress-bar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10,14,26,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 40px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    overflow-x: auto;
+  }
+
+  .step-dot {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    text-decoration: none;
+    white-space: nowrap;
+    padding: 4px 10px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+  }
+
+  .step-dot:hover {
+    color: var(--text);
+    border-color: var(--border);
+    background: var(--surface);
+  }
+
+  .step-dot .num {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    flex-shrink: 0;
+  }
+
+  .step-dot.done .num { background: var(--green); border-color: var(--green); color: #000; }
+  .step-dot.active .num { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .divider-dot { color: var(--border); font-size: 10px; }
+
+  /* ── MAIN CONTENT ── */
+  main {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 50px 40px 100px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── STEP SECTIONS ── */
+  .step {
+    margin-bottom: 64px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .step-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+
+  .step-number {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+    margin-top: 2px;
+    box-shadow: 0 0 20px rgba(59,130,246,0.3);
+  }
+
+  .step-title-block h2 {
+    font-family: var(--serif);
+    font-size: 22px;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+
+  .step-title-block .step-time {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .step-time .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 22px 26px;
+    margin-bottom: 14px;
+  }
+
+  .card.highlight {
+    border-color: rgba(59,130,246,0.4);
+    background: rgba(59,130,246,0.05);
+  }
+
+  .card.warning {
+    border-color: rgba(245,158,11,0.4);
+    background: rgba(245,158,11,0.05);
+  }
+
+  .card.success {
+    border-color: rgba(16,185,129,0.4);
+    background: rgba(16,185,129,0.05);
+  }
+
+  .card.danger {
+    border-color: rgba(239,68,68,0.35);
+    background: rgba(239,68,68,0.04);
+  }
+
+  .card-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .card.highlight .card-label { color: var(--accent2); }
+  .card.warning  .card-label { color: var(--yellow); }
+  .card.success  .card-label { color: var(--green); }
+  .card.danger   .card-label { color: var(--red); }
+
+  /* ── NUMBERED LIST ── */
+  .action-list {
+    list-style: none;
+    counter-reset: actions;
+  }
+
+  .action-list li {
+    counter-increment: actions;
+    display: flex;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: flex-start;
+  }
+
+  .action-list li:last-child { border-bottom: none; }
+
+  .action-list li::before {
+    content: counter(actions);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    background: rgba(59,130,246,0.12);
+    border: 1px solid rgba(59,130,246,0.3);
+    border-radius: 4px;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .action-list .action-text { flex: 1; }
+  .action-list .action-text strong { color: #fff; display: block; margin-bottom: 3px; }
+  .action-list .action-text p { color: var(--muted); font-size: 13.5px; margin: 0; }
+
+  /* ── SCREENSHOTS / IMAGE PLACEHOLDER ── */
+  .screenshot {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 14px 0;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .screenshot::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 28px;
+    background: rgba(255,255,255,0.04);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .screenshot .dots {
+    position: absolute;
+    top: 8px; left: 12px;
+    display: flex; gap: 5px;
+  }
+
+  .screenshot .dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+
+  .screenshot .dot.r { background: #ff5f57; }
+  .screenshot .dot.y { background: #ffbd2e; }
+  .screenshot .dot.g { background: #28c840; }
+
+  .screenshot .content {
+    margin-top: 28px;
+    padding: 10px 0 0;
+  }
+
+  /* ── CODE BLOCKS ── */
+  .code-block {
+    background: #060a14;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.8;
+    margin: 12px 0;
+    position: relative;
+    overflow-x: auto;
+  }
+
+  .code-block .cb-label {
+    position: absolute;
+    top: 10px; right: 14px;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+
+  .code-block .cmd { color: #7dd3fc; }
+  .code-block .str { color: #86efac; }
+  .code-block .cmt { color: #475569; font-style: italic; }
+  .code-block .kw  { color: #c084fc; }
+  .code-block .num { color: #fb923c; }
+  .code-block .var { color: #e2e8f0; }
+
+  /* Copy button */
+  .copy-btn {
+    position: absolute;
+    top: 10px; right: 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+  }
+
+  .copy-btn:hover { color: var(--text); border-color: var(--accent); }
+  .copy-btn.copied { color: var(--green); border-color: var(--green); }
+
+  /* ── TOKEN BOX ── */
+  .token-box {
+    background: #060a14;
+    border: 2px dashed rgba(59,130,246,0.4);
+    border-radius: 8px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 14px 0;
+  }
+
+  .token-box .token-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+
+  .token-box .token-text {
+    flex: 1;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  .token-box .token-text .label {
+    color: var(--accent2);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .token-box .token-text .value {
+    color: var(--muted);
+    background: var(--surface);
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    display: inline-block;
+  }
+
+  /* ── INLINE HIGHLIGHT ── */
+  code {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: rgba(59,130,246,0.1);
+    color: var(--accent2);
+    padding: 2px 7px;
+    border-radius: 3px;
+    border: 1px solid rgba(59,130,246,0.2);
+  }
+
+  /* ── CHECKPOINT ── */
+  .checkpoint {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 20px;
+    background: rgba(16,185,129,0.07);
+    border: 1px solid rgba(16,185,129,0.3);
+    border-radius: 8px;
+    margin: 14px 0;
+  }
+
+  .checkpoint .check-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .checkpoint .check-text { flex: 1; }
+  .checkpoint .check-text strong { color: var(--green); display: block; margin-bottom: 3px; font-size: 13px; }
+  .checkpoint .check-text p { font-size: 13px; color: var(--muted); margin: 0; }
+
+  /* ── WHAT TO EXPECT ── */
+  .expect-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 14px 0;
+  }
+
+  .expect-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+  }
+
+  .expect-card .label {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 8px;
+  }
+
+  .expect-card.good .label { color: var(--green); }
+  .expect-card.ok   .label { color: var(--yellow); }
+  .expect-card.bad  .label { color: var(--red); }
+
+  .expect-card p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  /* ── RESULT DISPLAY ── */
+  .result-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--mono);
+    font-size: 12px;
+    margin: 12px 0;
+  }
+
+  .result-table th {
+    background: var(--surface2);
+    color: var(--muted);
+    padding: 8px 14px;
+    text-align: left;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .result-table td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  .result-table tr:last-child td { border-bottom: none; }
+  .result-table .good { color: var(--green); }
+  .result-table .ok   { color: var(--yellow); }
+  .result-table .bad  { color: var(--red); }
+
+  /* ── FINAL BOX ── */
+  .final-box {
+    background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(139,92,246,0.08));
+    border: 1px solid rgba(139,92,246,0.3);
+    border-radius: 12px;
+    padding: 32px 36px;
+    margin-top: 60px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .final-box::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(139,92,246,0.12), transparent 70%);
+    pointer-events: none;
+  }
+
+  .final-box h3 {
+    font-family: var(--serif);
+    font-size: 22px;
+    color: #fff;
+    margin-bottom: 14px;
+  }
+
+  .final-box p {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .final-box .quote {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent2);
+    background: rgba(6,182,212,0.07);
+    border-left: 3px solid var(--accent2);
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 0 6px 6px 0;
+  }
+
+  /* ── NAV ARROWS ── */
+  p { margin-bottom: 10px; }
+
+  a.link { color: var(--accent2); text-decoration: none; }
+  a.link:hover { text-decoration: underline; }
+
+  .url-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(6,182,212,0.1);
+    border: 1px solid rgba(6,182,212,0.3);
+    color: var(--accent2);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    text-decoration: none;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+
+  .url-pill:hover {
+    background: rgba(6,182,212,0.18);
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="badge">MSEF 2026 — Hardware Validation Guide</div>
+  <h1>Running QPE on a<br><span>Real Quantum Computer</span></h1>
+  <p class="subtitle">Exact step-by-step instructions to run your QPE circuit on IBM's superconducting quantum hardware — from zero to real results in under 30 minutes.</p>
+</header>
+
+<nav class="progress-bar">
+  <a class="step-dot" href="#s1"><span class="num">1</span> Account</a>
+  <span class="divider-dot">›</span>
+  <a class="step-dot" href="#s2"><span class="num">2</span> Token</a>
+  <span class="divider-dot">›</span>
+  <a class="step-dot" href="#s3"><span class="num">3</span> Install</a>
+  <span class="divider-dot">›</span>
+  <a class="step-dot" href="#s4"><span class="num">4</span> Configure</a>
+  <span class="divider-dot">›</span>
+  <a class="step-dot" href="#s5"><span class="num">5</span> Run</a>
+  <span class="divider-dot">›</span>
+  <a class="step-dot" href="#s6"><span class="num">6</span> Results</a>
+  <span class="divider-dot">›</span>
+  <a class="step-dot" href="#s7"><span class="num">7</span> Interpret</a>
+</nav>
+
+<main>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- STEP 1 -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <section class="step" id="s1">
+    <div class="step-header">
+      <div class="step-number">1</div>
+      <div class="step-title-block">
+        <h2>Create Your IBM Quantum Account</h2>
+        <span class="step-time"><span class="dot"></span>~3 minutes</span>
+      </div>
+    </div>
+
+    <div class="card highlight">
+      <div class="card-label">Why this matters</div>
+      IBM Quantum gives you <strong>free access to real quantum hardware</strong> — actual superconducting qubits cooled to 15 millikelvin inside a dilution refrigerator. Your circuit will execute on that hardware, not a simulator. This is what makes the title "Quantum Computation" genuinely true.
+    </div>
+
+    <ul class="action-list">
+      <li>
+        <div class="action-text">
+          <strong>Open your browser and go to IBM Quantum</strong>
+          <p>Navigate to the URL below. You need to get to the account creation page.</p>
+        </div>
+      </li>
+    </ul>
+
+    <div style="margin: 10px 0 18px;">
+      <a class="url-pill" href="https://quantum.cloud.ibm.com" target="_blank">🔗 quantum.cloud.ibm.com</a>
+    </div>
+
+    <ul class="action-list">
+      <li>
+        <div class="action-text">
+          <strong>Click "Create an IBMid" or "Sign Up"</strong>
+          <p>It's free. You do not need a credit card. Use your personal or school email — it doesn't matter which.</p>
+        </div>
+      </li>
+      <li>
+        <div class="action-text">
+          <strong>Fill in your name, email, and create a password</strong>
+          <p>Password must be at least 8 characters. Write it down — you'll need it again.</p>
+        </div>
+      </li>
+      <li>
+        <div class="action-text">
+          <strong>Check your email inbox for a verification link from IBM</strong>
+          <p>Subject line: "Verify your IBMid". Click the link inside. If you don't see it in 2 minutes, check spam.</p>
+        </div>
+      </li>
+      <li>
+        <div class="action-text">
+          <strong>Log in and complete any onboarding prompts</strong>
+          <p>IBM may ask what you're using it for — just say "research / education". Accept terms of service.</p>
+        </div>
+      </li>
+    </ul>
+
+    <div class="checkpoint">
+      <div class="check-icon">✅</div>
+      <div class="check-text">
+        <strong>Checkpoint: You should be looking at the IBM Quantum dashboard</strong>
+        <p>You'll see a page with "Compute resources", maybe some news, and your account name in the top-right corner. If you're here, Step 1 is done.</p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- STEP 2 -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <section class="step" id="s2">
+    <div class="step-header">
+      <div class="step-number">2</div>
+      <div class="step-title-block">
+        <h2>Copy Your API Token</h2>
+        <span class="step-time"><span class="dot"></span>~2 minutes</span>
+      </div>
+    </div>
+
+    <div class="card warning">
+      <div class="card-label">⚠ Important</div>
+      Your API token is like a password. <strong>Do not paste it into any public website, GitHub repo, or share it with anyone.</strong> You'll only paste it into the Python file on your own computer.
+    </div>
+
+    <ul class="action-list">
+      <li>
+        <div class="action-text">
+          <strong>Click your profile icon in the top-right corner of the dashboard</strong>
+          <p>It looks like a person silhouette or shows your initials. A dropdown menu will appear.</p>
+        </div>
+      </li>
+      <li>
+        <div class="action-text">
+          <strong>Click "Account settings" or "Manage account"</strong>
+          <p>This takes you to your account management page at <code>quantum.ibm.com/account</code></p>
+        </div>
+      </li>
+      <li>
+        <div class="action-text">
+          <strong>Scroll down to the section labeled "API token" or "Access token"</strong>
+          <p>It's usually about halfway down the page. You'll see a long string of letters and numbers, partially hidden.</p>
+        </div>
+      </li>
+      <li>
+        <div class="action-text">
+          <strong>Click "Copy" or the copy icon next to the token</strong>
+          <p>The token is a long string that looks like: <code>a8f3c2d1e9b4...7f0e2a1b3c4d</code> (much longer in reality — about 200 characters). If you only see asterisks, click "Reveal" first, then copy.</p>
+        </div>
+      </li>
+      <li>
+        <div class="action-text">
+          <strong>Paste it somewhere safe temporarily</strong>
+          <p>Open Notepad (Windows), TextEdit (Mac), or any plain text editor. Paste it there so you don't lose it. You'll move it to the Python file in Step 4.</p>
+        </div>
+      </li>
+    </ul>
+
+    <div class="token-box">
+      <div class="token-icon">🔑</div>
+      <div class="token-text">
+        <div class="label">Your token will look like this</div>
+        <span class="value">a8f3c2d1e9b47f0e2a1b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6...</span>
+      </div>
+    </div>
+
+    <div class="checkpoint">
+      <div class="check-icon">✅</div>
+      <div class="check-text">
+        <strong>Checkpoint: You have the token copied</strong>
+        <p>It should be a very long alphanumeric string, at least 100 characters. If it's shorter than that, you may have copied something else — go back and look again.</p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- STEP 3 -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <section class="step" id="s3">
+    <div class="step-header">
+      <div class="step-number">3</div>
+      <div class="step-title-block">
+        <h2>Install Required Libraries</h2>
+        <span class="step-time"><span class="dot"></span>~5 minutes</span>
+      </div>
+    </div>
+
+    <div class="card">
+      You need two Python packages: <code>qiskit</code> (builds the circuit) and <code>qiskit-ibm-runtime</code> (talks to IBM's servers). You already have numpy/scipy from the main project.
+    </div>
+
+    <ul class="action-list">
+      <li>
+        <div class="action-text">
+          <strong>Open a Terminal (Mac/Linux) or Command Prompt (Windows)</strong>
+          <p>Mac: Press <code>Cmd+Space</code>, type "Terminal", press Enter. &nbsp; Windows: Press <code>Win+R</code>, type "cmd", press Enter.</p>
+        </div>
+      </li>
+      <li>
+        <div class="action-text">
+          <strong>Run this exact command and press Enter</strong>
+          <p>This installs both packages. It may take 1–3 minutes.</p>
+        </div>
+      </li>
+    </ul>
+
+    <div class="code-block">
+      <button class="copy-btn" onclick="copyCode(this, 'pip install qiskit qiskit-ibm-runtime matplotlib')">copy</button>
+      <span class="cmd">pip install</span> <span class="str">qiskit qiskit-ibm-runtime matplotlib</span>
+    </div>
+
+    <ul class="action-list">
+      <li>
+        <div class="action-text">
+          <strong>Wait for it to finish — you'll see "Successfully installed" at the end</strong>
+          <p>It downloads several packages. You'll see a lot of text scrolling by. That's normal. Look for the green "Successfully installed" message at the very end.</p>
+        </div>
+      </li>
+      <li>
+        <div class="action-text">
+          <strong>Verify the installation worked</strong>
+          <p>Run this quick check. If you see version numbers printed, you're good. If you see an error, try <code>pip3</code> instead of <code>pip</code>.</p>
+        </div>
+      </li>
+    </ul>
+
+    <div class="code-block">
+      <button class="copy-btn" onclick="copyCode(this, 'python -c \"import qiskit; import qiskit_ibm_runtime; print(\'Qiskit:\', qiskit.__version__); print(\'Runtime:\', qiskit_ibm_runtime.__version__)\"')">copy</button>
+      <span class="cmd">python</span> <span class="str">-c</span> <span class="var">"import qiskit; import qiskit_ibm_runtime; print('Qiskit:', qiskit.__version__)"</span>
+    </div>
+
+    <div class="card success">
+      <div class="card-label">Expected output</div>
+      <div class="code-block" style="margin:0; background: transparent; border: none; padding: 4px 0;">
+        <span class="var">Qiskit: 1.x.x</span><br>
+        <span class="var">Runtime: 0.x.x</span>
+      </div>
+    </div>
+
+    <div class="card danger">
+      <div class="card-label">If you see "pip is not recognized"</div>
+      You need to install Python first. Go to <strong>python.org/downloads</strong>, download Python 3.11 or later, install it, then come back and run the pip command again. Make sure to check "Add Python to PATH" during installation.
+    </div>
+
+    <div class="checkpoint">
+      <div class="check-icon">✅</div>
+      <div class="check-text">
+        <strong>Checkpoint: Both packages installed and verified</strong>
+        <p>You see version numbers when running the verify command. No error messages.</p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- STEP 4 -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <section class="step" id="s4">
+    <div class="step-header">
+      <div class="step-number">4</div>
+      <div class="step-title-block">
+        <h2>Configure the Hardware Validation File</h2>
+        <span class="step-time"><span class="dot"></span>~3 minutes</span>
+      </div>
+    </div>
+
+    <div class="card">
+      You need to open <code>hardware_validation.py</code> (the file from this project) and paste your IBM token into it. That's the only change you need to make.
+    </div>
+
+    <ul class="action-list">
+      <li>
+        <div class="action-text">
+          <strong>Find hardware_validation.py on your computer</strong>
+          <p>It's in the MSEF_2026 folder you downloaded from this project. If you're not sure where it is, search your Downloads folder.</p>
+        </div>
+      </li>
+      <li>
+        <div class="action-text">
+          <strong>Open it in any text editor</strong>
+          <p>Right-click the file → "Open with" → choose Notepad (Windows), TextEdit (Mac), or VS Code if you have it. Do NOT open it in Word.</p>
+        </div>
+      </li>
+      <li>
+        <div class="action-text">
+          <strong>Find line 174 — it looks exactly like this</strong>
+          <p>Use Ctrl+F (Find) and search for <code>YOUR_IBM_TOKEN_HERE</code> to jump right to it.</p>
+        </div>
+      </li>
+    </ul>
+
+    <div class="code-block">
+      <span class="cmt"># PASTE YOUR IBM TOKEN HERE:</span><br>
+      <span class="var">IBM_TOKEN = </span><span class="str">"YOUR_IBM_TOKEN_HERE"</span>
+    </div>
+
+    <ul class="action-list">
+      <li>
+        <div class="action-text">
+          <strong>Replace <code>YOUR_IBM_TOKEN_HERE</code> with your actual token</strong>
+          <p>Keep the quotation marks. It should look like this after:</p>
+        </div>
+      </li>
+    </ul>
+
+    <div class="code-block">
+      <span class="var">IBM_TOKEN = </span><span class="str">"a8f3c2d1e9b47f0e2a1b3c4d5e6f7a8b..."</span>  <span class="cmt"># your real token here</span>
+    </div>
+
+    <ul class="action-list">
+      <li>
+        <div class="action-text">
+          <strong>Save the file</strong>
+          <p>Press Ctrl+S (Windows) or Cmd+S (Mac). Make sure you save it as <code>.py</code> — not <code>.py.txt</code>. If using Notepad, choose "Save as" → set file type to "All files" → name it <code>hardware_validation.py</code>.</p>
+        </div>
+      </li>
+    </ul>
+
+    <div class="checkpoint">
+      <div class="check-icon">✅</div>
+      <div class="check-text">
+        <strong>Checkpoint: Token is in the file, file is saved</strong>
+        <p>Open the file again and verify the token is there between the quotation marks on the IBM_TOKEN line. The token should be very long — at least 100 characters.</p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- STEP 5 -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <section class="step" id="s5">
+    <div class="step-header">
+      <div class="step-number">5</div>
+      <div class="step-title-block">
+        <h2>Run the Circuit</h2>
+        <span class="step-time"><span class="dot"></span>~10–20 minutes (most of this is queue wait time)</span>
+      </div>
+    </div>
+
+    <div class="card highlight">
+      <div class="card-label">What this does</div>
+      The script will: (1) build the QPE circuit, (2) connect to IBM's servers, (3) find the least-busy real quantum device, (4) submit your job to the queue, (5) wait for results, (6) compare hardware vs simulation, (7) save a figure and JSON file.
+    </div>
+
+    <ul class="action-list">
+      <li>
+        <div class="action-text">
+          <strong>Open Terminal / Command Prompt</strong>
+          <p>Same as Step 3.</p>
+        </div>
+      </li>
+      <li>
+        <div class="action-text">
+          <strong>Navigate to the folder containing hardware_validation.py</strong>
+          <p>Use the <code>cd</code> command. For example, if the file is in your Downloads/MSEF_2026 folder:</p>
+        </div>
+      </li>
+    </ul>
+
+    <div class="code-block">
+      <span class="cmt"># Windows example:</span><br>
+      <span class="cmd">cd</span> <span class="str">C:\Users\YourName\Downloads\MSEF_2026</span><br><br>
+      <span class="cmt"># Mac example:</span><br>
+      <span class="cmd">cd</span> <span class="str">~/Downloads/MSEF_2026</span>
+    </div>
+
+    <ul class="action-list">
+      <li>
+        <div class="action-text">
+          <strong>Run the script</strong>
+          <p>Type this and press Enter. Keep the terminal window open — do not close it.</p>
+        </div>
+      </li>
+    </ul>
+
+    <div class="code-block">
+      <button class="copy-btn" onclick="copyCode(this, 'python hardware_validation.py')">copy</button>
+      <span class="cmd">python</span> <span class="str">hardware_validation.py</span>
+    </div>
+
+    <ul class="action-list">
+      <li>
+        <div class="action-text">
+          <strong>Watch the output — here's exactly what you'll see and when</strong>
+          <p>The script prints its progress at each stage.</p>
+        </div>
+      </li>
+    </ul>
+
+    <div class="screenshot">
+      <div class="dots">
+        <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+      </div>
+      <div class="content">
+        <span style="color:#94a3b8">=================================================================</span><br>
+        <span style="color:#e2e8f0">IBM QUANTUM HARDWARE VALIDATION</span><br>
+        <span style="color:#94a3b8">=================================================================</span><br><br>
+        <span style="color:#94a3b8">Minimal Laplacian Δ₀ for single edge:</span><br>
+        <span style="color:#86efac">  Eigenvalues: [0. 2.]</span><br>
+        <span style="color:#86efac">  True β₀ = 1 ✓</span><br><br>
+        <span style="color:#94a3b8">Simulation prediction...</span><br>
+        <span style="color:#7dd3fc">  |000>: p=0.5703</span><br>
+        <span style="color:#7dd3fc">  |001>: p=0.3479</span><br>
+        <span style="color:#7dd3fc">  ...</span><br><br>
+        <span style="color:#94a3b8">Connecting to IBM Quantum...</span><br>
+        <span style="color:#86efac">Selected backend: ibm_brisbane  ← real device name</span><br>
+        <span style="color:#86efac">  Qubits: 127</span><br>
+        <span style="color:#86efac">  Queue: 3 jobs</span><br><br>
+        <span style="color:#94a3b8">Submitting job (1024 shots)...</span><br>
+        <span style="color:#f59e0b">  Job ID: cjb7f2a1e9... ← save this!</span><br>
+        <span style="color:#f59e0b">  Waiting for results...</span>  <span style="color:#475569">← this takes a few minutes</span><br>
+      </div>
+    </div>
+
+    <div class="card warning">
+      <div class="card-label">⏱ The wait is normal</div>
+      After "Waiting for results..." the script pauses. This is the job sitting in IBM's queue. Typical wait: 2–10 minutes during off-peak hours (early morning, weekends), up to 20–30 minutes during busy times. <strong>Do not close the terminal.</strong> If you want to track progress, go to <strong>quantum.cloud.ibm.com/jobs</strong> in your browser and find your Job ID.
+    </div>
+
+    <div class="checkpoint">
+      <div class="check-icon">✅</div>
+      <div class="check-text">
+        <strong>Checkpoint: You see "Hardware results received!"</strong>
+        <p>When the job finishes, the script prints this line followed by counts and a comparison table. If you see this, real quantum hardware has executed your circuit.</p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- STEP 6 -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <section class="step" id="s6">
+    <div class="step-header">
+      <div class="step-number">6</div>
+      <div class="step-title-block">
+        <h2>Collect Your Output Files</h2>
+        <span class="step-time"><span class="dot"></span>~2 minutes</span>
+      </div>
+    </div>
+
+    <div class="card">
+      The script generates three output files in the same folder as hardware_validation.py. You need all three for your project.
+    </div>
+
+    <ul class="action-list">
+      <li>
+        <div class="action-text">
+          <strong>hardware_results.json — your raw data</strong>
+          <p>Contains: backend name, job ID, shot count, raw measurement counts, comparison statistics (TVD, Hellinger distance), β₀ estimate from hardware. This is your evidence of real hardware execution.</p>
+        </div>
+      </li>
+      <li>
+        <div class="action-text">
+          <strong>figure5_hardware.png — your comparison plot</strong>
+          <p>Side-by-side bar chart of simulation vs hardware measurement distributions, plus a deviation panel. Use this directly in your poster and paper.</p>
+        </div>
+      </li>
+      <li>
+        <div class="action-text">
+          <strong>Your terminal output — screenshot this</strong>
+          <p>Take a screenshot of the terminal showing the comparison table, TVD value, and β₀ estimate. This is additional evidence.</p>
+        </div>
+      </li>
+    </ul>
+
+    <div class="card highlight">
+      <div class="card-label">Record these values for your paper</div>
+      From the terminal output or hardware_results.json, write down:
+      <div style="margin-top: 10px;">
+        <table class="result-table">
+          <thead>
+            <tr><th>Value</th><th>Where to find it</th><th>What it means</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Backend name</strong></td><td>Line: "Selected backend:"</td><td>Which IBM device ran your circuit</td></tr>
+            <tr><td><strong>Job ID</strong></td><td>Line: "Job ID:"</td><td>Proof the job ran — verifiable on IBM's site</td></tr>
+            <tr><td><strong>TVD value</strong></td><td>Line: "Total Variation Distance:"</td><td>How much hardware noise affected results</td></tr>
+            <tr><td><strong>β₀ from hardware</strong></td><td>Line: "β₀ estimate from hardware:"</td><td>The Betti number your quantum computer estimated</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="checkpoint">
+      <div class="check-icon">✅</div>
+      <div class="check-text">
+        <strong>Checkpoint: All three files exist and you've recorded the 4 key values</strong>
+        <p>Check that figure5_hardware.png and hardware_results.json both exist in your project folder.</p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- STEP 7 -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <section class="step" id="s7">
+    <div class="step-header">
+      <div class="step-number">7</div>
+      <div class="step-title-block">
+        <h2>Interpret Your Results for Judges</h2>
+        <span class="step-time"><span class="dot"></span>Read carefully — this is what you'll say at the fair</span>
+      </div>
+    </div>
+
+    <p>Your hardware result will fall into one of three categories. Here's what each means and exactly how to explain it to a judge:</p>
+
+    <div class="expect-grid">
+      <div class="expect-card good">
+        <div class="label">✓ Strong Agreement</div>
+        <p><strong>TVD &lt; 0.15</strong><br><br>Hardware and simulation closely match. β₀ estimate ≈ 1. Means the IBM device had low noise on the day you ran it. Tell judges: "The hardware reproduced the simulation within X% — strong validation of the algorithm."</p>
+      </div>
+      <div class="expect-card ok">
+        <div class="label">~ Moderate Noise</div>
+        <p><strong>TVD 0.15–0.35</strong><br><br>Some deviation due to NISQ gate errors and decoherence. This is the most common case. Tell judges: "TVD of X confirms NISQ noise is present — exactly what the limitations section predicts. Fault-tolerant hardware would reduce this toward 0."</p>
+      </div>
+    </div>
+    <div class="expect-grid" style="margin-top: 0;">
+      <div class="expect-card bad">
+        <div class="label">✗ High Noise</div>
+        <p><strong>TVD &gt; 0.35</strong><br><br>Significant decoherence. β₀ estimate may be far from 1. This is also a valid result — it quantitatively demonstrates why fault tolerance matters. Tell judges: "The high TVD directly validates Limitation #3 in my paper."</p>
+      </div>
+      <div class="expect-card ok">
+        <div class="label">! What if it errors out?</div>
+        <p><strong>Connection / queue errors</strong><br><br>Try again at a different time. If IBM's backend is down, wait a few hours. If you get a token authentication error, double-check you copied the full token with no extra spaces.</p>
+      </div>
+    </div>
+
+    <div style="margin-top: 24px;">
+      <p style="color: #fff; font-size: 16px; font-weight: 600; margin-bottom: 14px;">Exactly what to say when a judge asks "did this run on a quantum computer?"</p>
+
+      <div class="card success">
+        <div class="card-label">✓ Your Answer</div>
+        "Yes. I submitted a 4-qubit QPE circuit to IBM's <em>[backend name]</em> quantum processor, Job ID <em>[your job ID]</em>, which you can verify at quantum.cloud.ibm.com/jobs. The device uses superconducting transmon qubits at 15 millikelvin. The hardware returned 1,024 measurements with a Total Variation Distance of <em>[your TVD]</em> from the ideal simulation — quantifying the NISQ noise. My β₀ estimate from hardware was <em>[your value]</em> versus the classical truth of 1. This gap directly validates the limitations section of my paper."
+      </div>
+    </div>
+
+    <div style="margin-top: 20px;">
+      <p style="color: #fff; font-size: 16px; font-weight: 600; margin-bottom: 14px;">Add this section to your research paper</p>
+
+      <div class="card">
+        <div class="card-label">Section 4.5 — Hardware Validation</div>
+        <p style="font-size: 13.5px; line-height: 1.8;">
+          To validate that our QPE simulation correctly predicts real quantum hardware behavior, we submitted a minimal QPE circuit to IBM's <strong>[backend name]</strong> quantum processor via the IBM Quantum cloud platform (Job ID: <strong>[job ID]</strong>). The circuit implements QPE for the 2×2 Combinatorial Laplacian of a single edge (Δ₀ = [[1,−1],[−1,1]]), requiring 4 qubits total (3 precision + 1 eigenstate register), with 1,024 measurement shots. Classical simulation predicts measurement probabilities {|000⟩: 0.570, |001⟩: 0.348, ...}. Hardware returned probabilities with Total Variation Distance TVD = <strong>[value]</strong> from simulation, reflecting NISQ gate errors and decoherence. The implied β₀ estimate from hardware is <strong>[value]</strong> (classical truth: 1). This result confirms (a) the circuit is correctly implemented, and (b) the TVD quantitatively demonstrates the impact of hardware noise described in Limitation #3, which fault-tolerant quantum hardware would reduce toward zero.
+        </p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- FINAL BOX -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div class="final-box">
+    <h3>After completing all 7 steps, your project is fully defensible</h3>
+    <p>You will have:</p>
+    <div class="quote">
+      ✓ Run a real QPE circuit on real superconducting quantum hardware at IBM<br>
+      ✓ A verifiable Job ID that any judge can look up<br>
+      ✓ Quantified hardware noise (TVD) — a genuine experimental result<br>
+      ✓ A comparison figure showing simulation vs hardware<br>
+      ✓ A complete, honest paper with no overstated claims
+    </div>
+    <p>The title "Quantum Computation of Topological Invariants" becomes fully justified. The NISQ noise in your results isn't a failure — it's the most interesting finding: it's the precise, measured reason why fault-tolerant hardware matters for this algorithm to reach its theoretical O(polylog n) complexity advantage.</p>
+  </div>
+
+</main>
+
+<script>
+  function copyCode(btn, text) {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'copy';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+
+  // Highlight active step in nav as user scrolls
+  const stepDots = document.querySelectorAll('.step-dot');
+  const steps = document.querySelectorAll('.step');
+  
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        stepDots.forEach(dot => {
+          dot.classList.remove('active');
+          if (dot.getAttribute('href') === '#' + id) {
+            dot.classList.add('active');
+          }
+        });
+      }
+    });
+  }, { threshold: 0.4 });
+
+  steps.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>

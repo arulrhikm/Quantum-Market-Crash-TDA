@@ -1,0 +1,47 @@
+=================================================================
+Early Fault-Tolerant Quantum Algorithms for Predicting Market Crashes
+MSEF 2026 — Full Reproduction Run
+=================================================================
+
+── BENCHMARK: QPE vs Classical ──────────────────────────
+  n= 5 L= 5 β_c=1 β_qpe=1.52±0.51 err=0.52 t_c=0.0012s t_q=0.0078s
+  n= 8 L= 8 β_c=1 β_qpe=2.08±0.71 err=1.08 t_c=0.0003s t_q=0.0131s
+  n=12 L=12 β_c=1 β_qpe=3.35±1.00 err=2.35 t_c=0.0003s t_q=0.0198s
+
+── BENCHMARK: Pauli Channel Encoding ────────────────────
+  n= 4 q=2 terms=3/16 recon=0.0e+00 trotter(r=10)=0.0000
+  n= 6 q=3 terms=20/64 recon=0.0e+00 trotter(r=10)=0.0364
+  n= 8 q=3 terms=21/64 recon=0.0e+00 trotter(r=10)=0.0323
+  n=10 q=4 terms=56/256 recon=0.0e+00 trotter(r=10)=0.0357
+  n=12 q=4 terms=46/256 recon=0.0e+00 trotter(r=10)=0.0344
+
+── BENCHMARK: Variational Phase Estimation ──────────────
+  n=5 β_vpe=1 truth=1 ✓ depth=13 t=0.56s
+  n=6 β_vpe=1 truth=1 ✓ depth=16 t=0.22s
+  n=8 β_vpe=1 truth=1 ✓ depth=22 t=0.45s
+
+── TAKENS EMBEDDING ─────────────────────────────────────
+  Series length=500 tau=13 dim=4 embedded_pts=461
+
+── FINANCIAL PIPELINE (Takens + TDA) ───────────────────
+  Windows=89 β₀_mean=1.82 β₁_mean=0.31 anomalies=32
+
+── HARDWARE RESULTS (pre-run, IBM ibm_torino) ──────────
+  Job ID:    d6cdb1p54hss73b8ek9g
+  Date:      2026-02-20
+  TVD:       0.1403
+  β₀ (HW):   0.99  (truth=1)
+
+── GENERATING FIGURES ───────────────────────────────────
+  Saved ./figure1_benchmark.png
+  Saved ./figure2_financial.png
+  Saved ./figure3_hardware.png
+  Saved ./figure4_pce.png
+  Saved ./figure5_vpe.png
+  Saved ./figure6_takens.png
+  Saved ./figure7_complexity.png
+  Saved results_all.json
+
+=================================================================
+ALL DONE — 7 figures + results_all.json
+=================================================================
