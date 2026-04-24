@@ -706,9 +706,10 @@ distance $\varepsilon$. For the 2007--2009 windows at the selected
 filtration scale $\varepsilon^*$ (the scale of maximal $\beta_1$
 persistence), we find $n_1\in[31,\,429]$ (mean 136, median 116),
 leading to eigendecomposition times of approximately $41$~ms to
-$817$~ms per window (mean $\approx 220$~ms) on a single CPU core
-(Colab runtime). The total pipeline runtime for all 190 windows is
-approximately $63.8$~seconds.
+$228$~ms per window (mean $\approx 89$~ms) on a single CPU core in the
+current reference run (\texttt{3\_Results/verification\_results.json}).
+The total pipeline runtime for all 190 windows is approximately
+$25.5$~seconds.
 
 \subsection{Implementation Details}
 
@@ -848,8 +849,14 @@ extrapolation for larger $n_k$.
 We employ a hardware-efficient ansatz~\cite{Kandala17} with
 alternating layers of single-qubit rotations ($R_Y$, $R_Z$) and
 entangling CNOT gates in a linear connectivity topology. The number of
-layers $L$ is scaled as $L = \lceil 2n \rceil$ following the PCE
-prescription~\cite{Sciorilli24}. The classical optimizer is COBYLA.
+layers is set to $L = \lceil 2n \rceil$ following the PCE
+prescription~\cite{Sciorilli24}; with $O(n)$ two-qubit depth per
+layer, this yields total circuit depth $O(n^2)$, which we use as the
+proxy $d_{\mathrm{proxy}} = 2n^2$ in resource comparisons. The
+classical optimizer is COBYLA, which typically converges in
+80--130 iterations on the toy and small-scale benchmarks reported here;
+the hardware resource estimate in Section~\ref{sec:hardware_estimate}
+uses 200 iterations as a conservative upper bound.
 
 \subsection{Resource Metrics}
 
@@ -915,13 +922,13 @@ The deflation protocol correctly recovers $\beta_1 \in \{1,2,3\}$ on
 synthetic Laplacians ($3/3$), but fails at $\beta_1 = 4$, where the
 optimizer converges to a local minimum returning
 $\tilde{\beta}_1 = 3$. This represents a known limitation of
-gradient-free optimization for higher-multiplicity null spaces. For the
-real market peak window (window 167, $\beta_1^{\text{full}}=22$,
-$n_k^{\text{full}}=267$), a loop-preserving subsampled benchmark with
-explicit recovered-loop counts remains future work in this revision, so
-we do not claim a real-data recovered-loop ratio here. Scaling beyond
-toy validation to the full $\beta_1 \leq 22$ regime therefore remains an
-open engineering task and a central direction for future work.
+gradient-free optimization for higher-multiplicity null spaces. A
+loop-preserving subsampled benchmark on the real market peak window
+(window~167, $\beta_1^{\text{full}}=22$, $n_k^{\text{full}}=267$)
+remains future work; we therefore make no claim about recovered-loop
+ratios on real market Laplacians in this manuscript. Scaling beyond
+toy validation to the full $\beta_1 \leq 22$ regime remains an open
+engineering task and a central direction for future work.
 
 To better characterize the $\beta_1=4$ failure mode, we ran a targeted
 toy sweep over deflation penalty $\mu \in \{3,5,8\}$ and ansatz depth
@@ -955,13 +962,12 @@ strings; cubic PCE ($\kappa=3$) uses $n = 5$ qubits, yielding
 $|\Pi^{(3)}| \leq \binom{5}{3} \cdot 27 = 270$. Both satisfy the
 encoding constraint $|\Pi^{(\kappa)}| \geq n_k = 64$.
 
-Using the depth proxy from this paper,
-$d_{\mathrm{proxy}} = 2n^2$ (from $L=2n$ HEA layers and $O(n)$
-two-qubit depth per layer), cubic PCE reduces qubit count by 37.5\%
-(8 $\rightarrow$ 5) and depth by 60.9\% (128 $\rightarrow$ 50)
-relative to quadratic PCE. We then run a fixed-budget benchmark
+Using the depth proxy $d_{\mathrm{proxy}} = 2n^2$ (derived in
+Section~\ref{sec:setup}), cubic PCE reduces qubit count by 37.5\%
+($8 \rightarrow 5$) and depth by 60.9\% ($128 \rightarrow 50$)
+relative to quadratic PCE. We then ran a fixed-budget benchmark
 ($n_k=64$, $\beta_1=2$, 2 deflation rounds, identical optimizer
-budget) to populate convergence and deflation-success statistics.
+budget) to measure convergence and deflation-success statistics.
 
 \begin{table}[t]
 \caption{Quadratic vs.\ Cubic PCE on $n_k = 64$, $\beta_1 = 2$}
@@ -980,11 +986,13 @@ Deflation success (rounds)   & 0/2 & 0/2 \\
 \end{tabular}
 \end{table}
 
-Under this intentionally matched and restricted optimization budget, neither
-encoding order reliably converges to the target null modes (0/2 rounds each).
-We therefore interpret Table~\ref{tab:kappa_comparison} as a resource-footprint
-comparison plus a negative-control optimization result, not as evidence that
-one $\kappa$ value dominates in convergence quality.
+Under this intentionally matched and restricted optimization budget,
+neither encoding order reliably converges to the target null modes
+(0/2 rounds each), indicating that the fixed budget was insufficient
+rather than that either encoding is inherently incapable. A full
+convergence comparison under extended budget is left to future work;
+the primary purpose of Table~\ref{tab:kappa_comparison} is
+resource-footprint characterization, not convergence benchmarking.
 
 \subsection{Resource Scaling Analysis}
 
@@ -1043,8 +1051,9 @@ circuit depth.
 At matched $n_k = 16$, the LGZ-QPE analytical proxy drops from 1.00 at
 $p=0$ to 0.316 at $p=10^{-4}$ and below $10^{-2}$ at $p=10^{-3}$, while
 PCE-VQE maintains accuracy above 0.90 through $p=5\times 10^{-3}$.
-Because the PCE curve is reported at fixed qubit count ($n=6$) while
-LGZ is reported at fixed Laplacian size ($n_k=16$), this comparison
+Because the PCE curve is reported at fixed qubit count ($n=6$, encoding
+$n_k \approx 63$ simplex dimensions under $\kappa=2$) while LGZ is
+reported at fixed Laplacian size ($n_k=16$), this comparison
 primarily demonstrates depth/noise sensitivity and should not be read as
 a like-for-like scaling comparison across encodings.
 The analytical extrapolation, which bounds LGZ accuracy via the
@@ -1063,10 +1072,11 @@ simulation provides the tightest available comparison.
   \centering
   \includegraphics[width=\columnwidth]{Figures/fig_noise_robustness.png}
   \caption{Noise robustness: PCE-VQE accuracy (measured, blue, $n=6$
-  qubits) vs.\ LGZ-QPE at $n_k = 16$ (measured, red solid) and analytical
-  extrapolation (red dashed). PCE maintains ${>}90\%$ accuracy up
-  to $p{=}5{\times}10^{-3}$; simulated LGZ-QPE collapses above
-  $p{=}10^{-4}$, matching the analytical bound.}
+  qubits, $n_k \approx 63$) vs.\ LGZ-QPE at $n_k = 16$ (measured,
+  red solid) and analytical extrapolation (red dashed). PCE maintains
+  ${>}90\%$ accuracy up to $p{=}5{\times}10^{-3}$; simulated LGZ-QPE
+  collapses above $p{=}10^{-4}$, matching the analytical bound.
+  These curves are not at the same encoded problem size; see text.}
   \label{fig:noise_robustness}
 \end{figure}
 
@@ -1201,8 +1211,10 @@ $(1-\epsilon_{2Q})^{480} \cdot (1-\epsilon_{1Q})^{2640} \approx$
 Achieving a Rayleigh-quotient estimate with standard error $10^{-2}$
 requires approximately 10{,}000 shots per measurement basis, with
 $G = 3$ commuting bases per optimization step. For a typical
-optimization trajectory of 200 iterations per deflation round and
-$\beta_1 = 2$ rounds, the total shot budget is approximately 12{,}000{,}000.
+optimization trajectory of 200 iterations per deflation round
+(a conservative upper bound over the 80--130 iterations observed
+empirically on toy benchmarks) and $\beta_1 = 2$ rounds, the total
+shot budget is approximately 12{,}000{,}000.
 This is within the throughput of current cloud-accessible devices
 and suggests that the protocol is near-term executable at the qubit
 scales reported. Scaling to $n_k \geq 10^3$ will require either
@@ -1211,8 +1223,8 @@ cancellation) or early fault-tolerant hardware.
 
 \subsection{Cost Crossover with Classical Methods}
 
-The CE benchmark processed all 190~windows in approximately 63.8~s
-total (mean 220~ms/window eigendecomposition time). Edge counts $n_k$
+The CE benchmark processed all 190~windows in approximately 25.5~s
+total (mean 89~ms/window eigendecomposition time). Edge counts $n_k$
 varied from 31 to 429 (mean 136, median 116). Laplacian sparsity:
 mean 3.48 nonzero entries per row (window-averaged maximum 8.8). The
 quantum approach becomes cost-competitive at $n_k \gtrsim 10^4$,
@@ -1268,9 +1280,8 @@ at those scales we rely on analytical bounds.
     protocol has no performance guarantee and may miss null vectors,
     especially for large $\beta_k$. Our experiments show correct
     recovery up to $\beta_1 = 3$ on synthetic Laplacians but failure
-    at $\beta_1 = 4$, and partial recovery on loop-preserving
-    subsamples of the Lehman-era market Laplacian
-    (Section~\ref{sec:pce_convergence}). For higher $\beta_k$,
+    at $\beta_1 = 4$; loop-preserving subsampled benchmarks on
+    real market Laplacians remain future work. For higher $\beta_k$,
     alternative strategies (SSVQE, weighted subspace search) would be
     needed.
     \item \textbf{No provable speedup:} Unlike QPE-based methods, the
@@ -1311,7 +1322,7 @@ a specific niche in the quantum TDA landscape:
 We do not claim quantum advantage at the scales demonstrated in this
 paper. The financial dataset produces Laplacians with
 $n_k \in [31,\,429]$ (mean~136), which classical methods solve in
-under 820~ms per window in our reproduced run (about 63.8~s total
+$\leq 228$~ms per window in our current reproduced run (about 25.5~s total
 for all 190 windows). Our contribution is methodological:
 demonstrating the feasibility of the PCE-variational approach for
 qTDA and identifying the crossover regime via resource extrapolation.
