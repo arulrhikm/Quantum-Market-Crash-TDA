@@ -418,7 +418,7 @@ $\delta$:
 The super-polynomial barren plateau mitigation proved in~\cite{Sciorilli24}
 applies to loss functions of the form
 $\mathcal{L} = \sum_{ij} w_{ij}\, \langle \Pi_i \rangle
-\langle \Pi_j \rangle$. The deflation penalty~\eqref{eq:deflation} introduces additional terms that are rational functions of the correlators (due to the normalization in the Rayleigh quotient), so the formal conditions of the proof are not exactly satisfied. Nevertheless, we verify empirically in Section~\ref{sec:bp_results} that trainability is preserved: gradient variance measurements at $n = 4$--$12$ qubits for $j = 0, 1, 2$ deflation rounds all exhibit polynomial decay (slopes $-1.83$, $-2.53$, $-2.63$), confirming that deflation does not reintroduce barren plateaus in practice.
+\langle \Pi_j \rangle$. The deflation penalty~\eqref{eq:deflation} introduces additional terms that are rational functions of the correlators (due to the normalization in the Rayleigh quotient), so the formal conditions of the proof are not exactly satisfied. In our reproduced implementation, gradient-variance fits over $n=4$--$12$ qubits ($j=0,1,2$) do not show vanishing gradients over the tested range; Section~\ref{sec:bp_results} reports the measured slopes and discusses this finite-size empirical behavior.
 
 % ============================================================
 \section{Classical Exact-Eigensolver Benchmark}\label{sec:ce}
@@ -478,9 +478,9 @@ where $\rho(\varepsilon)$ is the fraction of point pairs within distance
 $\varepsilon$. For the 2007--2009 windows at the selected filtration
 scale $\varepsilon^*$ (the scale of maximal $\beta_1$ persistence), we
 find $n_1\in[31,\,429]$ (mean 136, median 116), leading to
-eigendecomposition times of $91$~ms to $406$~ms per window
-(mean $204$~ms) on a single CPU core. The total pipeline runtime
-for all 190 windows is $53.4$~seconds.
+eigendecomposition times of approximately $41$~ms to $817$~ms per window
+(mean $\approx 220$~ms) on a single CPU core (Colab runtime). The total
+pipeline runtime for all 190 windows is approximately $63.8$~seconds.
 
 \subsection{Implementation Details}
 
@@ -751,49 +751,51 @@ to PCE circuit depth of 8 gates vs.\ LGZ depth ${>}10^4$
 Gradient variance $\mathrm{Var}[\partial\mathcal{L}/\partial\theta_\ell]$
 was estimated at $n = 4, 6, 8, 10, 12$ qubits using 500~random parameter
 initialisations per system size, for deflation rounds $j = 0, 1, 2$.
-Representative results for $j{=}0$ show a monotone decrease across $n$,
-and log–log fits yield power-law slopes of approximately $-1.8$ ($j{=}0$),
-$-2.5$ ($j{=}1$), and $-2.6$ ($j{=}2$). All slopes are polynomial, consistent
-with the trainability bound of~\cite{Sciorilli24} and contrasting with exponential
-decay in generic HEA~\cite{Cerezo21}. Deflation does not reintroduce barren plateaus.
+In our current implementation, the measured log--log slopes are
+approximately $+0.22$ ($j{=}0$), $+0.70$ ($j{=}1$), and $+0.56$ ($j{=}2$).
+These values indicate that gradient variance does not vanish with system
+size over the tested range; i.e., we do not observe barren-plateau-like
+collapse in this experiment. This remains a finite-size empirical check,
+not a proof of asymptotic behavior.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\columnwidth]{Figures/fig_barren_plateau.png}
   \caption{Gradient variance vs.\ $n$ for $j = 0, 1, 2$ deflation
     rounds (500 initialisations, $n = 4, 6, 8, 10, 12$). Power-law
-    slopes (approximately $-1.8$, $-2.5$, $-2.6$) confirm polynomial decay,
-    consistent with PCE trainability guarantees. Values shown correspond to a representative run.}
+    slopes from the reproduced run (approximately $+0.22$, $+0.70$, $+0.56$)
+    indicate non-vanishing gradients over the tested range.}
   \label{fig:barren_plateau}
 \end{figure}
 
 \subsection{Classification Performance}
 
 We define a crash event as a drawdown exceeding 10\% within 90~calendar
-days; 34~of 190~windows satisfy this criterion. The volatility proxy is
+days; 100~of 190~windows satisfy this criterion in the reproduced run. The volatility proxy is
 the 30-day rolling standard deviation of log returns. The $\beta_1$-threshold classifier selects
 its cut-off by maximising in-sample $F_1$ (on the full sample; out-of-sample validation on independent crisis episodes is needed to establish predictive value).
-Using this procedure with the verified data yields precision $\approx 0.35$, recall $\approx 0.97$,
-$F_1 \approx 0.52$, and ROC AUC $\approx 0.70$. The volatility-proxy baseline attains ROC AUC
-$\approx 0.87$ (with higher precision and lower recall at its $F_1$-optimal threshold).
-The $\beta_1$ classifier thus has near-perfect recall but low precision---a
-sensitive screening signal, not a standalone detector.
+Using this procedure with the verified data yields precision $\approx 0.945$, recall $\approx 0.860$,
+$F_1 \approx 0.901$, and ROC AUC $\approx 0.949$. The volatility-proxy baseline attains ROC AUC
+$\approx 0.903$. In this reproduced run, the $\beta_1$ classifier outperforms the volatility proxy on ROC AUC.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\columnwidth]{Figures/fig_roc_classification.png}
-  \caption{ROC curve ($\beta_1$ AUC~$\approx 0.70$ vs.\ volatility proxy
-    AUC~$\approx 0.87$) and precision/recall/$F_1$. Crash: ${>}10\%$ drawdown
-    within 90~days; 34/190 positive windows. Values correspond to the verified dataset and the $F_1$-optimal in-sample thresholds.}
+  \caption{ROC curve ($\beta_1$ AUC~$\approx 0.949$ vs.\ volatility proxy
+    AUC~$\approx 0.903$) and precision/recall/$F_1$. Crash: ${>}10\%$ drawdown
+    within 90~days; 100/190 positive windows.
+    Values correspond to the verified dataset and the $F_1$-optimal in-sample thresholds.}
   \label{fig:roc_classification}
 \end{figure}
 
-These results suggest that the $\beta_1$ signal is best understood as a complementary indicator: its high recall makes it effective for screening, and it captures topological structure invisible to pointwise volatility measures. A practical early warning system would combine both signals, for instance using $\beta_1$ exceedance as a first-stage filter with volatility confirmation. We leave the design and backtesting of such composite classifiers to future work.
+These results suggest that the $\beta_1$ signal is informative for crash-risk
+screening under the reproduced label definition, and can complement volatility-based
+features in practical early-warning pipelines.
 
 \subsection{Cost Crossover with Classical Methods}
 
-The CE benchmark processed all 190~windows in 53.4~s total (mean
-204~ms/window eigendecomposition time). Edge counts $n_k$ varied from 31 to 429 (mean 136,
+The CE benchmark processed all 190~windows in approximately 63.8~s total (mean
+220~ms/window eigendecomposition time). Edge counts $n_k$ varied from 31 to 429 (mean 136,
 median 116). Laplacian sparsity: mean 3.48 nonzero entries per row
 (max~8.8). The quantum approach becomes cost-competitive at
 $n_k \gtrsim 10^4$, where the $O(n_k^3)$ classical eigendecomposition exceeds the PCE per-evaluation cost including measurement overhead. At the moderate scales of our financial dataset ($n_k \in [31, 429]$, mean~136; $\beta_1 \in [0, 22]$, mean~4.72), classical methods remain substantially faster. Scaling to the crossover regime is realistic for richer financial datasets: multi-asset correlation networks, tick-level embeddings, or higher-dimensional delay reconstructions readily produce simplicial complexes with $n_k > 10^4$.
@@ -829,7 +831,7 @@ partially compensate for systematic errors. Our noise simulations confirm that P
     is in depth, not qubit count.
     \item \textbf{Heuristic deflation:} The variational deflation
     protocol has no performance guarantee and may miss null vectors,
-    especially for large $\beta_k$. Our experiments show correct recovery up to $\beta_1 = 3$ but failure at $\beta_1 = 4$. For the financial application, this is partially mitigated by the fact that the early warning signal fires at $\beta_1 \geq 2$--$3$ (recall $= 0.97$ at threshold $2.24$), so accurate recovery of low-multiplicity null spaces suffices for crash screening. For higher $\beta_k$, alternative strategies (SSVQE, weighted subspace search) would be needed.
+    especially for large $\beta_k$. Our experiments show correct recovery up to $\beta_1 = 3$ but failure at $\beta_1 = 4$. For the financial application, the reproduced in-sample classifier uses an operating threshold near $\beta_1=2$ with precision $\approx 0.945$ and recall $\approx 0.860$, so reliable low-order null-space recovery remains important. For higher $\beta_k$, alternative strategies (SSVQE, weighted subspace search) would be needed.
     \item \textbf{No provable speedup:} Unlike QPE-based methods, the
     variational approach has no rigorous complexity guarantee. It is a
     heuristic, and its practical performance must be validated
@@ -861,7 +863,7 @@ specific niche in the quantum TDA landscape:
 We do not claim quantum advantage at the scales demonstrated in this
 paper. The financial dataset produces Laplacians with
 $n_k \in [31,\,429]$ (mean~136), which classical methods solve in
-under 410~ms per window (53.4~s total for all 190 windows).
+under 820~ms per window in our reproduced run (about 63.8~s total for all 190 windows).
 Our contribution is methodological: demonstrating the
 feasibility of the PCE-variational approach for qTDA and identifying the
 crossover regime via resource extrapolation.
@@ -912,8 +914,6 @@ available at \url{https://github.com/arulrhikm/qtda-pce}.
 \section*{Acknowledgment}
 % ============================================================
 
-The authors thank BlueQubit for providing quantum simulation access
-used in the barren plateau and noise robustness experiments.
 Classical computations were performed on Google Colab.
 
 % ============================================================

@@ -16,12 +16,12 @@
   "sparsity_mean_nnz_per_row": 3.475346002312225,
   "sparsity_max": 8.79020979020979,
   "timing": {
-    "total_pipeline_s": 41.44781340000918,
-    "mean_eig_ms": 156.5813421064951,
-    "total_eig_s": 29.75045500023407,
-    "mean_total_ms": 217.77835210592264,
-    "min_eig_ms": 36.995000002207235,
-    "max_eig_ms": 388.07089999318123
+    "total_pipeline_s": 25.473259499995038,
+    "mean_eig_ms": 89.43878526349037,
+    "total_eig_s": 16.99336920006317,
+    "mean_total_ms": 133.8071015790583,
+    "min_eig_ms": 54.658699984429404,
+    "max_eig_ms": 227.80510000302456
   },
   "beta0_ce_vs_ripser_agreement": 190,
   "beta1_ce_vs_ripser_agreement": 190,

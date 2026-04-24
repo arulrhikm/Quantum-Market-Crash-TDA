@@ -575,24 +575,26 @@ def fig_barren_plateau(out):
 # ═════════════════════════════════════════════════════════════════════════
 def fig_roc_classification(out):
     """ROC and PR curves for beta_1-based crash classification."""
-    # Compute crash labels: drawdown > 10% within 90 calendar days
+    # Compute crash labels: forward-looking drop >10% within next 90 calendar days
+    # from each window endpoint.
     prices = sp_df['Close'].values
     log_ret_series = np.diff(np.log(prices))
 
     crash_labels = np.zeros(n_windows, dtype=int)
     for i, s in enumerate(starts):
-        # Window covers returns s to s+W-1
-        # Check drawdown in the window
-        p_window = prices[s:s + W + 1]
-        max_dd = 0
-        peak = p_window[0]
-        for p in p_window:
-            if p > peak:
-                peak = p
-            dd = (peak - p) / peak
-            if dd > max_dd:
-                max_dd = dd
-        if max_dd > 0.10:
+        # The window endpoint in price index is s + W. We define a positive
+        # event if price falls by >10% from the endpoint value at any time
+        # within the next 90 calendar days.
+        end_idx = s + W
+        if end_idx >= len(sp_df.index):
+            continue
+        end_date = sp_df.index[end_idx]
+        end_price = prices[end_idx]
+        future_mask = (sp_df.index > end_date) & (sp_df.index <= end_date + pd.Timedelta(days=90))
+        future_prices = prices[future_mask]
+        if future_prices.size == 0:
+            continue
+        if np.min(future_prices) <= 0.90 * end_price:
             crash_labels[i] = 1
 
     n_crashes = crash_labels.sum()
@@ -711,9 +713,14 @@ if __name__ == '__main__':
     fig_noise_robustness(os.path.join(OUT_DIR, 'fig_noise_robustness.png'))
 
     # 5. Barren plateau
-    print("\n[5/6] Barren plateau analysis (this may take a few minutes...)")
-    bp_results = fig_barren_plateau(
-        os.path.join(OUT_DIR, 'fig_barren_plateau.png'))
+    skip_bp = os.getenv('QTDA_SKIP_BP', '0') == '1'
+    if skip_bp:
+        print("\n[5/6] Barren plateau analysis skipped (QTDA_SKIP_BP=1)")
+        bp_results = None
+    else:
+        print("\n[5/6] Barren plateau analysis (this may take a few minutes...)")
+        bp_results = fig_barren_plateau(
+            os.path.join(OUT_DIR, 'fig_barren_plateau.png'))
 
     # 6. ROC classification
     print("\n[6/6] ROC classification")
@@ -747,11 +754,12 @@ if __name__ == '__main__':
         print(f"  {r['name']}: true={r['true_beta']}, est={r['est_beta']} [{mark}]")
 
     # Save BP slopes
-    print(f"\nBarren plateau slopes:")
-    for j in range(3):
-        qubit_counts = [4, 6, 8, 10, 12]
-        variances = bp_results[j]
-        log_n = np.log(qubit_counts)
-        log_var = np.log(np.maximum(variances, 1e-20))
-        slope = np.polyfit(log_n, log_var, 1)[0]
-        print(f"  j={j}: slope = {slope:.2f}")
+    if bp_results is not None:
+        print(f"\nBarren plateau slopes:")
+        for j in range(3):
+            qubit_counts = [4, 6, 8, 10, 12]
+            variances = bp_results[j]
+            log_n = np.log(qubit_counts)
+            log_var = np.log(np.maximum(variances, 1e-20))
+            slope = np.polyfit(log_n, log_var, 1)[0]
+            print(f"  j={j}: slope = {slope:.2f}")
