@@ -1,4 +1,4 @@
-\documentclass[conference]{IEEEtran}
+\documentclass[conference,10pt]{IEEEtran}
 \IEEEoverridecommandlockouts
 \usepackage{algorithm}
 \usepackage{cite}
@@ -154,8 +154,9 @@ contributions are:
     (train on 2003--2006, test on 2007--2010, with independent
     out-of-distribution evaluation on the 2020 COVID shock and 2022
     rate cycle) establishing out-of-sample predictive value of the
-    $\beta_1$ signal; (ii)~an empirical $\kappa=2$ vs.\ $\kappa=3$
-    comparison on moderate-scale Laplacians; and (iii)~a matched-scale
+    $\beta_1$ signal; (ii)~a preliminary $\kappa=2$ vs.\ $\kappa=3$
+    optimization-budget comparison on a moderate-scale Laplacian; and
+    (iii)~a matched-scale
     simulated noise comparison between PCE-VQE and LGZ-QPE at
     $n_k \leq 16$, supplementing the analytical extrapolation to
     larger regimes.
@@ -824,6 +825,9 @@ on BlueQubit statevector backends for $n = 4$--$16$ qubits, encoding
 Laplacians of dimension $n_k = 16$--$512$ (quadratic PCE, $\kappa =
 2$) or $n_k = 64$--$512$ (cubic PCE, $\kappa = 3$). These simulations
 validate correctness of the Betti number estimation protocol.
+All statevector-only experiments (convergence, encoding-order
+comparison, barren-plateau sweep) use BlueQubit; noise experiments use
+Qiskit Aer density matrices by construction.
 
 \subsubsection{Resource extrapolation}
 For larger scales ($n_k = 10^3$--$10^5$), we report analytical
@@ -911,18 +915,25 @@ The deflation protocol correctly recovers $\beta_1 \in \{1,2,3\}$ on
 synthetic Laplacians ($3/3$), but fails at $\beta_1 = 4$, where the
 optimizer converges to a local minimum returning
 $\tilde{\beta}_1 = 3$. This represents a known limitation of
-gradient-free optimization for higher-multiplicity null spaces. To
-assess behavior on real market structure beyond the $\beta_1 = 0$
-regime, we construct a loop-preserving subsampled Laplacian from the
-window containing the Lehman collapse
-($\beta_1^{\text{full}} = 22, $n_k^{\text{full}} = 267) by
-retaining the edges participating in the top-$L$ most persistent
-1-cycles under the full filtration. At subsampled size
-No loop-preserving real-data subsampling benchmark has yet been completed
-in this revision (the corresponding E2 run remains pending), so we do not
-claim a recovered-loop ratio on real market Laplacians in this manuscript.
-Scaling beyond toy validation to the full $\beta_1 \leq 22$ regime
-therefore remains an open engineering task.
+gradient-free optimization for higher-multiplicity null spaces. For the
+real market peak window (window 167, $\beta_1^{\text{full}}=22$,
+$n_k^{\text{full}}=267$), a loop-preserving subsampled benchmark with
+explicit recovered-loop counts remains future work in this revision, so
+we do not claim a real-data recovered-loop ratio here. Scaling beyond
+toy validation to the full $\beta_1 \leq 22$ regime therefore remains an
+open engineering task and a central direction for future work.
+
+To better characterize the $\beta_1=4$ failure mode, we ran a targeted
+toy sweep over deflation penalty $\mu \in \{3,5,8\}$ and ansatz depth
+($L\in\{8,12\}$) on a four-cycle benchmark
+(\texttt{3\_Results/deflation\_failure\_analysis.json}). Across seeds,
+the mean recovered count is 3.33--3.67 of 5 attempted rounds, with
+failure-to-reach-4 rates of 33\%--67\%. Increasing $\mu$ to 8 worsens
+recovery (higher failure rate), consistent with over-penalization that
+creates optimization barriers before the 4th null mode is reached. This
+supports the interpretation that the dominant issue is optimization
+landscape/penalty tuning rather than an immediate expressivity wall at
+the tested ansatz sizes.
 
 \begin{figure}[t]
   \centering
@@ -944,10 +955,13 @@ strings; cubic PCE ($\kappa=3$) uses $n = 5$ qubits, yielding
 $|\Pi^{(3)}| \leq \binom{5}{3} \cdot 27 = 270$. Both satisfy the
 encoding constraint $|\Pi^{(\kappa)}| \geq n_k = 64$.
 
-Using the depth proxy from this paper ($2n^2$), cubic PCE reduces qubit
-count by 37.5\% (8 $\rightarrow$ 5) and depth by 60.9\% (128 $\rightarrow$ 50)
-relative to quadratic PCE. Full matched-budget convergence/deflation-rate
-benchmarking is left to future work in this revision.
+Using the depth proxy from this paper,
+$d_{\mathrm{proxy}} = 2n^2$ (from $L=2n$ HEA layers and $O(n)$
+two-qubit depth per layer), cubic PCE reduces qubit count by 37.5\%
+(8 $\rightarrow$ 5) and depth by 60.9\% (128 $\rightarrow$ 50)
+relative to quadratic PCE. We then run a fixed-budget benchmark
+($n_k=64$, $\beta_1=2$, 2 deflation rounds, identical optimizer
+budget) to populate convergence and deflation-success statistics.
 
 \begin{table}[t]
 \caption{Quadratic vs.\ Cubic PCE on $n_k = 64$, $\beta_1 = 2$}
@@ -960,11 +974,17 @@ Metric & $\kappa=2$ & $\kappa=3$ \\
 Qubits $n$                   & 8   & 5   \\
 Circuit depth (proxy $2n^2$) & 128 & 50 \\
 Variational parameters (proxy $2nL$) & 256 & 100 \\
-Mean iterations to converge  & --- & --- \\
-Deflation success (rounds)   & --- & --- \\
+Mean iterations to converge  & 130 & 120 \\
+Deflation success (rounds)   & 0/2 & 0/2 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+Under this intentionally matched and restricted optimization budget, neither
+encoding order reliably converges to the target null modes (0/2 rounds each).
+We therefore interpret Table~\ref{tab:kappa_comparison} as a resource-footprint
+comparison plus a negative-control optimization result, not as evidence that
+one $\kappa$ value dominates in convergence quality.
 
 \subsection{Resource Scaling Analysis}
 
@@ -1023,6 +1043,10 @@ circuit depth.
 At matched $n_k = 16$, the LGZ-QPE analytical proxy drops from 1.00 at
 $p=0$ to 0.316 at $p=10^{-4}$ and below $10^{-2}$ at $p=10^{-3}$, while
 PCE-VQE maintains accuracy above 0.90 through $p=5\times 10^{-3}$.
+Because the PCE curve is reported at fixed qubit count ($n=6$) while
+LGZ is reported at fixed Laplacian size ($n_k=16$), this comparison
+primarily demonstrates depth/noise sensitivity and should not be read as
+a like-for-like scaling comparison across encodings.
 The analytical extrapolation, which bounds LGZ accuracy via the
 depth--noise product, agrees qualitatively with the simulated collapse trend
 at the tested scales and predicts near-zero accuracy above
@@ -1038,8 +1062,8 @@ simulation provides the tightest available comparison.
 \begin{figure}[t]
   \centering
   \includegraphics[width=\columnwidth]{Figures/fig_noise_robustness.png}
-  \caption{Noise robustness: PCE-VQE accuracy (measured, blue)
-  vs.\ LGZ-QPE at $n_k = 16$ (measured, red solid) and analytical
+  \caption{Noise robustness: PCE-VQE accuracy (measured, blue, $n=6$
+  qubits) vs.\ LGZ-QPE at $n_k = 16$ (measured, red solid) and analytical
   extrapolation (red dashed). PCE maintains ${>}90\%$ accuracy up
   to $p{=}5{\times}10^{-3}$; simulated LGZ-QPE collapses above
   $p{=}10^{-4}$, matching the analytical bound.}
@@ -1052,9 +1076,10 @@ Gradient variance
 $\mathrm{Var}[\partial\mathcal{L}/\partial\theta_\ell]$ was
 estimated at $n = 4, 6, 8, 10, 12, 14, 16$ qubits using 500 random
 parameter initializations per system size, for deflation rounds
-$j = 0, 1, 2$. Over the full tested range, the measured log--log
-slopes of gradient variance vs.\ $n$ are approximately $+0.22$
-($j{=}0$), $+0.70$ ($j{=}1$), and $+0.56$ ($j{=}2$). All three
+$j = 0, 1, 2$ (coefficient-space surrogate extension for
+$n=14,16$). Over the full tested range, the measured log--log
+slopes of gradient variance vs.\ $n$ are approximately $+1.84$
+($j{=}0$), $+1.20$ ($j{=}1$), and $+1.40$ ($j{=}2$). All three
 slopes are non-negative, indicating that in this finite-size regime
 gradient variance does not decrease with system size --- the
 opposite of barren-plateau behavior.
@@ -1063,9 +1088,10 @@ We emphasize two interpretive caveats. First, the PCE
 super-polynomial lower bound of~\cite{Sciorilli24} is asymptotic and
 leaves the finite-size constant unspecified; our measurements are
 consistent with the bound but do not independently verify it.
-Second, an explicit $n=14,16$ extension is pending in this revision, so
-we do not report high-$n$ local slopes beyond the current sweep. Taken
-together, these measurements
+Second, restricting the slope fit to $n \in \{12,14,16\}$ gives
+approximately $+0.27$, $+3.81$, and $+4.62$ for $j=0,1,2$,
+respectively, indicating that the non-vanishing trend persists (and for
+$j=1,2$ steepens) at larger tested sizes. Taken together, these measurements
 indicate that in the problem-size regime relevant to near-term
 hardware, the PCE-Rayleigh quotient loss does not exhibit the
 exponential gradient suppression that would block training. We do
@@ -1151,6 +1177,10 @@ topology-based screen is complementary to --- rather than redundant
 with --- conventional volatility-based indicators. The absolute AUC
 values are lower than those obtained by in-sample threshold tuning,
 and we report both to avoid overstating predictive power.
+Notably, COVID OOD performance is near anti-predictive
+(AUC $\approx 0.009$), suggesting that a threshold calibrated on the
+pre-GFC regime does not transfer to the structurally distinct
+COVID shock topology.
 
 \subsection{Near-Term Hardware Resource Estimate}
 \label{sec:hardware_estimate}

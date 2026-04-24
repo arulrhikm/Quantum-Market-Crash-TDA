@@ -1,0 +1,42 @@
+{
+  "benchmark": {
+    "n_k": 64,
+    "beta1_true": 2
+  },
+  "kappa2": {
+    "n_qubits": 8,
+    "layers": 16,
+    "depth_proxy_2n2": 128,
+    "param_proxy_2nL": 256,
+    "mean_iterations_to_converge": 130.0,
+    "mean_deflation_success_rounds": 0.0,
+    "trials": [
+      {
+        "seed": 0,
+        "success_rounds": 0,
+        "iters": [
+          130,
+          130
+        ]
+      }
+    ]
+  },
+  "kappa3": {
+    "n_qubits": 5,
+    "layers": 10,
+    "depth_proxy_2n2": 50,
+    "param_proxy_2nL": 100,
+    "mean_iterations_to_converge": 120.0,
+    "mean_deflation_success_rounds": 0.0,
+    "trials": [
+      {
+        "seed": 0,
+        "success_rounds": 0,
+        "iters": [
+          120,
+          120
+        ]
+      }
+    ]
+  }
+}

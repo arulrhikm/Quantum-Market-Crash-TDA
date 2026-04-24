@@ -16,3 +16,15 @@
   - `3_Results/hardware_estimate.json`
   - `3_Results/hyperparameters.json`
   - `Figures/fig_roc_classification_split.png`
+
+## Kappa comparison close-out (E4)
+- `python run_kappa_comparison.py`
+- Output: `3_Results/kappa_comparison.json`
+
+## Deflation failure analysis close-out
+- `python analyze_deflation_failure.py`
+- Output: `3_Results/deflation_failure_analysis.json`
+
+## Barren plateau extension (E5)
+- `python run_barren_plateau_extended.py`
+- Output: `3_Results/barren_plateau_extended.json`
