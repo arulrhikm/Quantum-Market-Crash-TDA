@@ -55,14 +55,22 @@ import pandas as pd
 csv_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                         'sp500_2003_2010.csv')
 sp_df = pd.read_csv(csv_path, parse_dates=['Date'], index_col='Date')
-sp_dates = sp_df.index
+# Normalize index to robust datetime type across pandas/Colab versions.
+sp_dates = pd.to_datetime(sp_df.index, errors='coerce', utc=True)
+if sp_dates.isna().any():
+    raise ValueError("Failed to parse some dates from sp500_2003_2010.csv")
+try:
+    sp_dates = sp_dates.tz_convert(None)
+except AttributeError:
+    pass
+sp_df.index = sp_dates
 
 tau, m, W, step = 13, 4, 500, 8
 log_ret = np.diff(np.log(sp_df['Close'].values))
 starts = list(range(0, len(log_ret) - W + 1, step))
 n_windows = len(starts)
 # Mid-date of each window for x-axis
-win_mid_dates = [sp_dates[s + W // 2] for s in starts]
+win_mid_dates = [sp_df.index[s + W // 2].to_pydatetime() for s in starts]
 
 beta1_all = np.array(vdata['beta1_all_ce'])
 beta0_all = np.array(vdata['beta0_all_ce'])

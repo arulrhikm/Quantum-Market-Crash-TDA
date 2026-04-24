@@ -23,18 +23,38 @@ warnings.filterwarnings("ignore")
 
 def get_sp500_data(start="2003-01-02", end="2010-12-31"):
     """Download real S&P 500 daily closes from Yahoo Finance."""
+    import pandas as pd
+
+    def _normalize_datetime_index(df):
+        """
+        Force Date index to a real DatetimeIndex across pandas versions.
+        Colab/pandas may leave timezone-formatted CSV dates as strings unless
+        explicitly normalized.
+        """
+        dt = pd.to_datetime(df.index, errors="coerce", utc=True)
+        if dt.isna().any():
+            raise ValueError("Failed to parse some dates in S&P 500 dataset index.")
+        # Make naive UTC so downstream strftime/date arithmetic is stable.
+        try:
+            dt = dt.tz_convert(None)
+        except AttributeError:
+            # Already tz-naive on some pandas versions
+            pass
+        df.index = dt
+        return df
+
     cache = os.path.join(os.path.dirname(__file__), "sp500_2003_2010.csv")
     if os.path.exists(cache):
-        import pandas as pd
         df = pd.read_csv(cache, parse_dates=["Date"], index_col="Date")
+        df = _normalize_datetime_index(df)
         print(f"Loaded cached data: {cache} ({len(df)} rows)")
         return df["Close"].values, df.index
     # Download
     import yfinance as yf
-    import pandas as pd
     ticker = yf.Ticker("^GSPC")
     df = ticker.history(start=start, end=end, auto_adjust=True)
     df = df[["Close"]].dropna()
+    df = _normalize_datetime_index(df)
     df.to_csv(cache)
     print(f"Downloaded S&P 500 data -> {cache} ({len(df)} rows)")
     return df["Close"].values, df.index
