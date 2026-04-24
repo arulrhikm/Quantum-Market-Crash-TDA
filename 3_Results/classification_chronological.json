@@ -1,0 +1,36 @@
+{
+  "threshold_beta_1": 7.0,
+  "threshold_vol": 0.009366353954202069,
+  "counts": {
+    "total_windows": 190,
+    "total_positive": 37,
+    "train_windows": 126,
+    "test_windows": 64,
+    "train_positive": 27,
+    "test_positive": 10
+  },
+  "beta1_train": {
+    "precision": 0.8695652173913043,
+    "recall": 0.7407407407407407,
+    "f1": 0.8,
+    "auc": 0.9427609427609427
+  },
+  "beta1_test": {
+    "precision": 0.2777777777777778,
+    "recall": 1.0,
+    "f1": 0.43478260869565216,
+    "auc": 0.8175925925925925
+  },
+  "vol_train": {
+    "precision": 0.5454545454545454,
+    "recall": 0.8888888888888888,
+    "f1": 0.676056338028169,
+    "auc": 0.904601571268238
+  },
+  "vol_test": {
+    "precision": 0.14583333333333334,
+    "recall": 0.7,
+    "f1": 0.2413793103448276,
+    "auc": 0.6518518518518518
+  }
+}

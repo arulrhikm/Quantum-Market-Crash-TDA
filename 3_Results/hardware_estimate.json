@@ -1,0 +1,15 @@
+{
+  "n_qubits": 16,
+  "reps": 32,
+  "transpiled_depth": 242,
+  "n_cx": 480,
+  "n_1q": 2640,
+  "eps_2q": 0.003,
+  "eps_1q": 0.0002,
+  "per_shot_fidelity_estimate": 0.13942657828907656,
+  "shots_per_basis": 10000,
+  "commuting_bases_G": 3,
+  "iterations_per_round": 200,
+  "rounds": 2,
+  "total_shot_budget": 12000000
+}

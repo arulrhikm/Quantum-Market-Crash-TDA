@@ -1,0 +1,23 @@
+{
+  "takens": {
+    "tau": 13,
+    "m": 4
+  },
+  "windowing": {
+    "W": 500,
+    "step": 8
+  },
+  "vr": {
+    "epsilon_star": 0.32
+  },
+  "classification": {
+    "label_definition": "forward-looking: drop >10% from window endpoint within next 90 calendar days",
+    "threshold_beta_1": 7.0,
+    "threshold_vol": 0.009366353954202069
+  },
+  "optimizer": {
+    "name": "COBYLA",
+    "mu": 5.0,
+    "delta": 0.01
+  }
+}

@@ -1,0 +1,527 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{enumitem}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  showstringspaces=false
+}
+
+\title{Experimental Plan: Remaining Experiments for\\
+``Depth-Efficient Quantum Topological Data Analysis\\for Financial
+Crash Early Warning''}
+\author{Internal working document --- QCE 2026 submission}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section*{Purpose}
+
+This document enumerates the experiments that must be completed before
+the paper's [XX] placeholders can be filled in. Each experiment is
+tagged with its target paper section, required backend, estimated
+runtime, and the specific numbers it must produce. All compute is on
+BlueQubit (statevector) plus a local Qiskit Aer install for
+density-matrix noise simulation.
+
+\section{Experiment Inventory}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{llllr}
+\toprule
+ID & Name & Backend & Target section & Priority \\
+\midrule
+E1  & Chronological split classification       & CPU only           & \S~Classification Performance         & P0 \\
+E1b & OOD crisis evaluation (COVID, rate cycle)& CPU only           & \S~Classification Performance (OOD)   & P0 \\
+E2  & Real-data loop recovery                  & BlueQubit SV       & \S~PCE Convergence Validation         & P0 \\
+E3  & LGZ-QPE noise at $n_k\in\{8,16\}$        & Qiskit Aer DM      & \S~Noise Robustness                   & P0 \\
+E4  & $\kappa=2$ vs $\kappa=3$ comparison      & BlueQubit SV       & \S~Encoding-Order Comparison          & P1 \\
+E5  & Extended barren plateau ($n=14,16$)      & BlueQubit SV       & \S~Barren Plateau Analysis            & P1 \\
+E6  & Hardware resource estimate               & Local transpile    & \S~Near-Term Hardware Resource Est.   & P1 \\
+E7  & Codebase polish + hyperparameters.json   & --                 & Reproducibility                       & P2 \\
+\bottomrule
+\end{tabular}
+\caption{Experiment inventory. P0 = blocks submission; P1 = strongly
+recommended; P2 = polish.}
+\end{table}
+
+\section{Experiment Details}
+
+\subsection{E1: Chronological Split Classification}
+
+\paragraph*{Target.} Section~\emph{Classification Performance},
+Table~\emph{Classification Performance: Chronological Split},
+Figure~\emph{ROC Classification Split}.
+
+\paragraph*{Backend.} CPU-only (pandas, scikit-learn,
+matplotlib). No quantum compute.
+
+\paragraph*{Inputs.} Existing
+\texttt{3\_Results/verification\_results.json} (Betti curves per
+window), \texttt{data/sp500\_2003\_2010.csv} (prices).
+
+\paragraph*{Procedure.}
+\begin{enumerate}[leftmargin=*]
+  \item Load per-window $\beta_1$ values and window start dates.
+  \item Compute 90-day forward drawdown per window; label as 1 if
+        drawdown $>$ 10\%, else 0.
+  \item Compute 30-day rolling volatility proxy per window.
+  \item Chronological split: \texttt{train = windows starting in
+        2003--2006}; \texttt{test = windows starting in 2007--2010}.
+  \item Sweep thresholds on training split only; pick $F_1$-optimal
+        $\beta_1$ threshold and volatility threshold.
+  \item Evaluate fixed thresholds on held-out test split.
+  \item Record precision, recall, $F_1$, ROC AUC for both classifiers
+        on both splits.
+\end{enumerate}
+
+\paragraph*{Outputs.}
+\begin{itemize}[leftmargin=*]
+  \item \texttt{3\_Results/classification\_chronological.json} with
+        all eight (classifier $\times$ split $\times$ metric) values,
+        plus \texttt{threshold\_beta\_1}, \texttt{threshold\_vol},
+        split counts, positive counts.
+  \item \texttt{Figures/fig\_roc\_classification\_split.png} with
+        four curves (train/test $\times$ $\beta_1$/volatility).
+\end{itemize}
+
+\paragraph*{Placeholders filled.} Table I in paper (eight metric
+cells), prose values [XX] in the Classification Performance section
+(precision, recall, $F_1$, two AUCs, positive-window count).
+
+\paragraph*{Runtime estimate.} Minutes (CPU only).
+
+\subsection{E1b: Out-of-Distribution Crisis Evaluation}
+
+\paragraph*{Target.} Table~\emph{Out-of-Distribution Evaluation}.
+
+\paragraph*{Backend.} CPU-only.
+
+\paragraph*{Inputs.} Fresh S\&P 500 downloads:
+2019-06-01 to 2020-12-31 (COVID), 2022-01-01 to 2023-06-30 (rate
+cycle). Use \texttt{yfinance}.
+
+\paragraph*{Procedure.}
+\begin{enumerate}[leftmargin=*]
+  \item Download prices; compute log returns.
+  \item Apply the identical Takens pipeline ($\tau=13$, $m=4$, $W=500$,
+        step 8). Note: COVID window is short, so expect $\sim$30--50
+        windows per episode.
+  \item Compute Betti curves via \texttt{ripser} for each window (use
+        the same $\varepsilon^*=0.32$ applied to the 2003--2010 data).
+  \item Apply the 2003--2006-trained $\beta_1$ threshold from E1.
+        \emph{Do not re-tune.}
+  \item Compute precision/recall/$F_1$/AUC for each episode
+        separately.
+\end{enumerate}
+
+\paragraph*{Outputs.}
+\texttt{3\_Results/classification\_ood.json}; numbers go into
+Table~II of the paper.
+
+\paragraph*{Placeholders filled.} Eight metric cells in the OOD
+table.
+
+\paragraph*{Runtime estimate.} Under an hour (data download +
+\texttt{ripser}).
+
+\subsection{E2: Real-Data Loop Recovery}
+
+\paragraph*{Target.} Prose paragraph in \S~PCE Convergence
+Validation (second paragraph currently containing seven [XX]
+placeholders).
+
+\paragraph*{Backend.} BlueQubit statevector (\texttt{cpu} device is
+sufficient for $n \leq 16$).
+
+\paragraph*{Goal.} Demonstrate that PCE-VQE + deflation recovers
+loops from a \emph{real} market Laplacian, not just toy examples.
+This closes the ``toy only'' gap that reviewers will flag.
+
+\paragraph*{Procedure.}
+\begin{enumerate}[leftmargin=*]
+  \item Identify the sliding window with maximal full $\beta_1$ from
+        the 2007--2010 data (window~167, $\beta_1 = 22$).
+  \item Run \texttt{ripser} on the full point cloud of that window
+        to obtain the $H_1$ persistence diagram.
+  \item Sort 1-cycles by persistence length; select top
+        $L \in \{3, 5, 10\}$ most persistent.
+  \item Build a subsampled edge set that contains every edge
+        participating in those top-$L$ cycles, plus a controlled
+        number of surrounding edges to reach $n_k$ in
+        $\{64, 128, 256\}$.
+  \item Assemble $\Delta_1^{\mathrm{sub}}$; classically compute
+        $\beta_1^{\mathrm{sub}}$ via \texttt{scipy.linalg.eigh}.
+  \item Run PCE-VQE (\texttt{PCEVQE(kappa=2, backend='bluequbit')})
+        with deflation for up to $\beta_1^{\mathrm{sub}} + 1$ rounds.
+  \item Record how many null vectors are successfully recovered
+        before the loss threshold is exceeded.
+\end{enumerate}
+
+\paragraph*{Cycle-to-edge mapping.} \texttt{ripser} does not return
+cycle representatives by default. Options:
+\begin{enumerate}[label=(\alph*),leftmargin=*]
+  \item Use \texttt{ripser.representation} extension if available;
+        returns chain representatives.
+  \item Use \texttt{gudhi.RipsComplex} with
+        \texttt{persistence\_intervals\_in\_dimension(1)} and
+        \texttt{persistence\_pairs()} which yield simplex indices.
+  \item \textbf{Fallback (recommended for paper deadline):} instead
+        of exact representative extraction, greedily select edges
+        with length in the persistence interval $[b, d]$ of each
+        top-$L$ cycle. This preserves most cycles empirically even
+        if a few are broken.
+\end{enumerate}
+
+\paragraph*{Outputs.}
+\texttt{3\_Results/real\_data\_loop\_recovery.json} containing
+\texttt{window\_idx}, \texttt{beta\_1\_full}, \texttt{nk\_full},
+\texttt{nk\_sub}, \texttt{n\_qubits}, \texttt{beta\_1\_sub},
+\texttt{beta\_1\_recovered}, \texttt{loss\_history}.
+
+\paragraph*{Placeholders filled.} All seven [XX] values in the
+``real market structure'' paragraph:
+$\beta_1^{\text{full}}$, $n_k^{\text{full}}$, $n_k$, $n$,
+$\beta_1^{\text{sub}}$, recovered count, target count.
+
+\paragraph*{Runtime estimate.} 4--8 hours including debug time. Each
+PCE-VQE run at $n = 16$ takes $\sim$10--30 minutes for full COBYLA
+convergence with 2--3 deflation rounds.
+
+\paragraph*{Success criterion.} \emph{Any} nonzero recovery count is
+publishable. Even 1/5 is better than the current validation at
+$\beta_1 = 0$ only. If nothing recovers, report that honestly and
+discuss in Limitations.
+
+\subsection{E3: LGZ-QPE Noise Simulation at Matched Scale}
+
+\paragraph*{Target.} \S~Noise Robustness (prose values), updated
+Figure~\emph{Noise Robustness v2}.
+
+\paragraph*{Backend.} Qiskit Aer \texttt{AerSimulator(method=
+'density\_matrix')}. Runs on CPU in seconds at $n \leq 8$ system
+qubits + 4 ancilla.
+
+\paragraph*{Why not BlueQubit.} Statevector cannot represent mixed
+states under depolarizing noise. You need density-matrix simulation
+\emph{or} trajectory averaging. Qiskit Aer's density-matrix backend
+is the simplest and fastest path.
+
+\paragraph*{Test cases.}
+\begin{itemize}[leftmargin=*]
+  \item $n_k = 8$, $\beta_1 = 1$: 4-cycle padded with isolated
+        diagonal entries.
+  \item $n_k = 16$, $\beta_1 = 2$: two disjoint 4-cycles.
+\end{itemize}
+
+\paragraph*{Procedure.}
+\begin{enumerate}[leftmargin=*]
+  \item Assemble each test Laplacian; verify $\beta_1$ classically.
+  \item Pad to dimension $2^q$ (q=3 or 4) with
+        $\lambda_{\max}/2$ on diagonal.
+  \item Compute $U = \exp(i \Delta t)$ via matrix exponential;
+        Trotterize for controlled-$U^{2^k}$ gates.
+  \item Build QPE circuit with $q$ ancilla qubits, Hadamard layer,
+        controlled-$U^{2^k}$ cascade, inverse QFT, measurement.
+  \item For each error rate $p \in \{0, 10^{-4}, 5\times10^{-4},
+        10^{-3}, 5\times10^{-3}, 10^{-2}\}$:
+        \begin{itemize}
+          \item Build a \texttt{NoiseModel} with one-qubit
+                depolarizing error $p$ on all 1q gates and two-qubit
+                depolarizing error $p$ on all CX gates.
+          \item Run with 4096 shots starting from a uniform
+                superposition over the system register (approximates
+                the maximally-mixed initial state).
+          \item Estimate $\tilde\beta_1 = 2^q \cdot P(\text{ancilla
+                = }0)$.
+          \item Accuracy $= 1 - |\tilde\beta_1 - \beta_1^{\text{true}}|
+                / \max(1, \beta_1^{\text{true}})$ clipped to $[0,1]$.
+          \item Repeat 5 trials; average.
+        \end{itemize}
+\end{enumerate}
+
+\paragraph*{Known pitfall.} Building
+\texttt{controlled-exp(iDt)} from scratch is nontrivial.
+Recommended: use \texttt{qiskit.circuit.library.PhaseEstimation}
+with a custom unitary via \texttt{.unitary()}. This bypasses explicit
+Trotterization and gives you a valid (if not hardware-realistic) QPE
+circuit for the purpose of noise benchmarking.
+
+\paragraph*{Outputs.}
+\texttt{3\_Results/lgz\_qpe\_noise.json} with nested dict
+\texttt{\{nk: \{p: \{beta\_est, beta\_true, accuracy\}\}\}}.
+
+\paragraph*{Placeholders filled.} Five [XX] values in Noise
+Robustness prose plus new data points in figure.
+
+\paragraph*{Runtime estimate.} 1--2 days including debug time.
+Actual simulation is fast; the controlled-unitary construction is
+the time sink.
+
+\subsection{E4: $\kappa=2$ vs.\ $\kappa=3$ Comparison}
+
+\paragraph*{Target.} \S~Encoding-Order Comparison,
+Table~\emph{Quadratic vs.\ Cubic PCE}.
+
+\paragraph*{Backend.} BlueQubit statevector.
+
+\paragraph*{Procedure.}
+\begin{enumerate}[leftmargin=*]
+  \item Construct benchmark Laplacian: two disjoint 32-edge cycles
+        (n\_k = 64, $\beta_1 = 2$). Verify classically.
+  \item Run PCE-VQE with $\kappa = 2$, $n = 8$ qubits, HEA layers
+        $L = 16$, COBYLA, $\mu = 5.0$, $\delta = 0.01$, max\_iter =
+        500. Execute 2 deflation rounds.
+  \item Run PCE-VQE with $\kappa = 3$, $n = 5$ qubits, HEA layers
+        $L = 10$, identical optimizer settings. Execute 2 deflation
+        rounds.
+  \item Record per run: qubit count, transpiled circuit depth,
+        parameter count, mean COBYLA iterations to convergence
+        per deflation round, whether each round successfully
+        recovered a null vector.
+  \item Repeat each run 5 times with different random seeds; report
+        means.
+\end{enumerate}
+
+\paragraph*{Outputs.} \texttt{3\_Results/kappa\_comparison.json}
+with one entry per $\kappa$.
+
+\paragraph*{Placeholders filled.} Eight [XX] in
+Table~\emph{Quadratic vs.\ Cubic} plus three prose [XX] values.
+
+\paragraph*{Runtime estimate.} 2--4 hours including BlueQubit queue
+time.
+
+\subsection{E5: Extended Barren Plateau Sweep}
+
+\paragraph*{Target.} \S~Barren Plateau Analysis, updated
+Figure~\emph{Barren Plateau v2}.
+
+\paragraph*{Backend.} BlueQubit statevector. $n=16$ is the heaviest
+single run; still fast on \texttt{gpu} device.
+
+\paragraph*{Procedure.}
+\begin{enumerate}[leftmargin=*]
+  \item Modify existing barren-plateau script: change sweep to
+        $n \in \{4, 6, 8, 10, 12, 14, 16\}$.
+  \item For each $n$, 500 random parameter initializations uniformly
+        in $[-\pi, \pi]$.
+  \item For each initialization and each deflation round
+        $j \in \{0, 1, 2\}$, compute gradient of Rayleigh-quotient
+        loss w.r.t.\ a fixed parameter index $\ell$ via parameter
+        shift.
+  \item Record variance over the 500 samples.
+  \item Linear regression in log--log space: slope and $R^2$.
+  \item Also compute slope from $n=12$ to $n=16$ only, to assess
+        whether growth persists at larger $n$.
+\end{enumerate}
+
+\paragraph*{Outputs.}
+\texttt{3\_Results/barren\_plateau\_extended.json} with
+\texttt{\{j: \{n: variance\}\}}, full-range slope, and
+high-$n$-only slope.
+
+\paragraph*{Placeholders filled.} Six [XX] in Barren Plateau
+prose (three full-range slopes + three high-$n$ slopes).
+
+\paragraph*{Runtime estimate.} 4--12 hours depending on BlueQubit
+queue. The $n=16$ sweep is the bottleneck; can parallelize seeds.
+
+\paragraph*{Interpretation caveat.} If high-$n$ slopes turn
+\emph{negative}, this is important to report honestly: it would
+mean the finite-size non-vanishing we see breaks down, consistent
+with asymptotic vanishing. Either outcome is publishable.
+
+\subsection{E6: Hardware Resource Estimate}
+
+\paragraph*{Target.} \S~Near-Term Hardware Resource Estimate.
+
+\paragraph*{Backend.} Local Qiskit transpile only; no simulation run.
+
+\paragraph*{Procedure.}
+\begin{enumerate}[leftmargin=*]
+  \item Build $n = 16$, $L = 32$ HEA via
+        \texttt{TwoLocal(16, ['ry','rz'], 'cx', 'linear', reps=32)}.
+  \item Transpile to basis \texttt{[cx, sx, rz]} at
+        \texttt{optimization\_level=3} with a representative
+        coupling map (IBM Heron-like, linear strip of 16 qubits).
+  \item Count post-transpile: CX count, 1-qubit gate count, circuit
+        depth.
+  \item Compute per-shot fidelity:
+        $f = (1 - \epsilon_{2Q})^{n_{CX}} \cdot
+             (1 - \epsilon_{1Q})^{n_{1Q}}$
+        with $\epsilon_{2Q} = 3\times 10^{-3}$,
+        $\epsilon_{1Q} = 2\times 10^{-4}$.
+  \item Shot budget: $N_{\text{shots}} = N_{\text{basis}} \cdot
+        G \cdot N_{\text{iter}} \cdot N_{\text{rounds}}$ with
+        $N_{\text{basis}} = 10{,}000$, $G = 3$, $N_{\text{iter}} =
+        200$, $N_{\text{rounds}} = 2$.
+\end{enumerate}
+
+\paragraph*{Outputs.}
+\texttt{3\_Results/hardware\_estimate.json}.
+
+\paragraph*{Placeholders filled.} Six [XX] values in the Hardware
+Resource Estimate section.
+
+\paragraph*{Runtime estimate.} 10 minutes.
+
+\subsection{E7: Codebase Polish}
+
+\paragraph*{Target.} Reproducibility, Data Availability.
+
+\paragraph*{Tasks.}
+\begin{itemize}[leftmargin=*]
+  \item Create \texttt{3\_Results/hyperparameters.json} logging
+        optimizer settings, PCE parameters, Takens parameters, VR
+        threshold, window settings, crash-label definition.
+  \item Resolve the ``max 8.8'' ambiguity: the 8.8 is the
+        \emph{window-averaged maximum} of nonzero-entries-per-row,
+        not a single-row max. Rename the JSON field to
+        \texttt{mean\_of\_max\_nnz\_per\_row} and update the paper
+        text (already changed in this revision).
+  \item Add a one-page \texttt{REPRODUCE.md} in the repo pointing
+        each paper figure/table to its generating script and input
+        files.
+  \item Ensure fresh-clone reproducibility: run every script from a
+        clean venv following \texttt{REPRODUCE.md} and confirm all
+        outputs match committed JSONs / figures to within random
+        seed.
+\end{itemize}
+
+\paragraph*{Runtime estimate.} A few hours.
+
+\section{Backend and Tooling Setup}
+
+\subsection{BlueQubit}
+
+\begin{itemize}[leftmargin=*]
+  \item Install: \texttt{pip install bluequbit}.
+  \item Token: export \texttt{BLUEQUBIT\_API\_TOKEN} in shell.
+  \item Device selection: \texttt{bq.run(circuit, device='cpu')} for
+        $n \leq 20$; \texttt{device='gpu'} for $n > 20$ or when
+        running many parallel seeds.
+  \item Thin wrapper (already planned):
+        \texttt{2\_Quantum/bluequbit\_backend.py} exposing
+        \texttt{statevector(qc)} and \texttt{expval(qc, pauli\_str)}
+        so the core PCE-VQE class does not hard-code the backend.
+\end{itemize}
+
+\subsection{Local Qiskit Aer (for E3 only)}
+
+\begin{itemize}[leftmargin=*]
+  \item Install: \texttt{pip install qiskit qiskit-aer}.
+  \item No cloud token needed.
+  \item Density-matrix backend:
+        \texttt{AerSimulator(method='density\_matrix',
+        noise\_model=nm)}.
+  \item At $n \leq 8$ system qubits the density-matrix state has
+        $\leq 2^{16}$ complex entries; runs in seconds per shot
+        on a laptop.
+\end{itemize}
+
+\subsection{Why Not Pure Statevector for Noise?}
+
+Statevector simulation models pure states $|\psi\rangle$ under
+unitary evolution. Depolarizing noise maps pure states to mixed
+states $\rho = \sum_k p_k |\psi_k\rangle\langle\psi_k|$, which a
+single statevector cannot represent. Two acceptable workarounds if
+local Qiskit is unavailable:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Trajectory sampling:} on each shot, stochastically
+        inject Pauli errors after each gate according to the
+        depolarizing channel, then statevector-simulate the noisy
+        circuit. Average over many trajectories. Implementable on
+        BlueQubit but requires a custom pass; not recommended for
+        the deadline.
+  \item \textbf{BlueQubit density-matrix (if available):} if
+        BlueQubit exposes a density-matrix backend at submission
+        time, use it. Check BlueQubit docs; if not, use local
+        Aer.
+\end{enumerate}
+
+\section{Execution Timeline}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lllll}
+\toprule
+Day & Experiment & Hours & Parallelizable with & Blocking? \\
+\midrule
+1    & E1, E1b, E6, E7    & 4--6  & all others   & No \\
+1--2 & E4                 & 4     & E5, E3       & No \\
+2--4 & E5 (submit to BQ)  & 12    & E2, E3       & No \\
+3--5 & E3 (local Qiskit)  & 16    & E2, E5       & No \\
+4--7 & E2                 & 16    & debug-heavy  & \textbf{Yes} (P0) \\
+7    & Paper updates + figure regens & 4 & --    & \\
+\bottomrule
+\end{tabular}
+\caption{Recommended timeline. Total calendar time: one week of
+focused effort. E2 is the highest-risk item.}
+\end{table}
+
+\section{Risk Register}
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{E2 cycle extraction.} \texttt{ripser} does not cleanly
+        expose cycle representatives. Fallback: length-based edge
+        selection (preserves most cycles empirically). Have both
+        implementations ready.
+  \item \textbf{E3 LGZ circuit construction.} Building
+        controlled-$\exp(i\Delta t)$ correctly is the main pitfall.
+        Use \texttt{qiskit.circuit.library.PhaseEstimation} with a
+        unitary matrix passed directly; accept that this is not
+        hardware-decomposable but is valid as a logical QPE for
+        noise benchmarking.
+  \item \textbf{E5 unexpected slopes.} If high-$n$ slopes are
+        strongly negative, the paper's finite-size claim weakens.
+        Mitigation: report exactly what is measured, weaken prose
+        to ``finite-size non-vanishing within the tested range,
+        with an inflection near $n = 12$.''
+  \item \textbf{OOD data quality (E1b).} 2020 COVID is an abrupt
+        single event; few windows will cover the drawdown. Expect
+        noisy AUCs. Mitigation: also report raw $\beta_1$ and
+        volatility trajectories as a sanity-check figure; do not
+        over-interpret single-episode AUC.
+\end{itemize}
+
+\section{Placeholder Dependency Map}
+
+Every [XX] in the paper is filled by exactly one experiment. Losing
+an experiment means its [XX] values must be either removed (prose
+rewritten) or labeled as future work. Nothing else in the paper
+should be silently left blank at submission.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{ll}
+\toprule
+Paper location & Experiment \\
+\midrule
+Abstract (held-out ROC AUC)                         & E1 \\
+Section I, Contribution item 4 (prose)              & E1, E1b, E3, E4 \\
+Section VII.B, real-data paragraph (7 values)       & E2 \\
+Section VII.C, $\kappa$ table + prose (11 values)   & E4 \\
+Section VII.D, noise prose (5 values)               & E3 \\
+Section VII.E, barren plateau prose (6 slopes)      & E5 \\
+Section VII.G, classification tables (12 + 8 cells) & E1, E1b \\
+Section VII.H, hardware estimate (6 values)         & E6 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\end{document}
