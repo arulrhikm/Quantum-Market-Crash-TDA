@@ -58,7 +58,7 @@ def state(theta, n, layers):
     return s / nrm if nrm > 1e-12 else s
 
 
-def run_case(lap, n=6, layers=12, mu=5.0, rounds=5, seeds=3, maxiter=200, delta=0.01):
+def run_case(lap, n=6, layers=12, mu=5.0, rounds=5, seeds=8, maxiter=350, delta=0.01):
     n_k = lap.shape[0]
     n_params = n * layers
     results = []
@@ -70,7 +70,7 @@ def run_case(lap, n=6, layers=12, mu=5.0, rounds=5, seeds=3, maxiter=200, delta=
         for _ in range(rounds):
             best = 1e9
             best_vec = None
-            for _r in range(2):
+            for _r in range(4):
                 t0 = rng.uniform(-np.pi, np.pi, n_params)
 
                 def loss(t):
@@ -105,9 +105,9 @@ def run_case(lap, n=6, layers=12, mu=5.0, rounds=5, seeds=3, maxiter=200, delta=
 def main():
     lap = build_four_disjoint_cycles_laplacian()
     out = {"beta1_true": 4, "sweeps": []}
-    for mu in [3.0, 5.0, 8.0]:
+    for mu in [1.0, 3.0, 5.0, 8.0]:
         out["sweeps"].append(run_case(lap, n=6, layers=12, mu=mu))
-    for layers in [8, 12]:
+    for layers in [8, 12, 16]:
         out["sweeps"].append(run_case(lap, n=6, layers=layers, mu=5.0))
     with open(OUT, "w", encoding="utf-8") as f:
         json.dump(out, f, indent=2)

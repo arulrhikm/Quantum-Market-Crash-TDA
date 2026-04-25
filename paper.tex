@@ -65,7 +65,7 @@ split classification experiments (train on 2003--2006, test on
 $\beta_1$ signal with held-out ROC AUC~$\approx$~0.818. We emphasize
 methodological scope: validation is limited to moderate scales
 ($n_k \leq 512$ in simulation) and low-multiplicity null spaces
-($\beta_1 \leq 3$ for reliable deflation); scaling to hardware and
+($\beta_1 \leq 4$ in tuned toy sweeps); scaling to hardware and
 to the high-$\beta_1$ regime of real financial data remain open
 directions.
 \end{abstract}
@@ -85,7 +85,7 @@ structural instabilities invisible to conventional volatility measures
 such as variance or VaR\@. During stable regimes a time series $\{x_t\}$
 exhibits small, roughly Gaussian fluctuations; approaching a crash, the
 underlying dynamical attractor undergoes topological deformation that
-precedes the dislocation by days to weeks~\cite{GK18}. This motivates
+precedes the dislocation by months to over a year~\cite{GK18}. This motivates
 the search for early warning signals that operate on the geometry of
 market data rather than its pointwise statistics, and in particular on
 its topology, which is stable under perturbations and captures
@@ -111,7 +111,7 @@ estimate the eigenspectrum of the combinatorial Laplacian, from which
 the Betti number is recovered as the nullity. However, standard QPE
 requires deep circuits with many ancilla qubits, making it impractical
 for near-term and early fault tolerant hardware. Moreover, recent
-complexity-theoretic analyses~\cite{King23, Berry24} have shown that
+complexity-theoretic analyses~\cite{CrichignoKohler24, Schmidhuber23, Berry24} have shown that
 superpolynomial quantum advantage requires exponentially large Betti
 numbers and specific spectral gap conditions, raising the bar for
 practical near-term quantum TDA.
@@ -324,9 +324,12 @@ first quantum algorithm for persistent Betti numbers of arbitrary
 dimensions, efficient for Vietoris--Rips complexes but limited to
 normalized estimates.
 
-\textbf{Complexity-theoretic limitations.} King and
-Kohler~\cite{King23} proved that computing Betti numbers exactly is
-\#P-hard and approximating them to multiplicative error is NP-hard.
+\textbf{Complexity-theoretic limitations.} Crichigno and
+Kohler~\cite{CrichignoKohler24} proved that deciding whether a clique
+complex has a $k$-dimensional hole is QMA$_1$-hard and that the exact
+counting version is \#BQP-hard. Schmidhuber and Lloyd~\cite{Schmidhuber23}
+separately showed that approximating Betti numbers to multiplicative
+error is NP-hard for general complexes.
 Berry et al.~\cite{Berry24} showed that superquadratic quantum
 speedups require multiplicative error approximation with asymptotically
 growing Betti numbers, and proposed a dequantization showing that
@@ -341,7 +344,7 @@ of the combinatorial Laplacian, designed for early fault-tolerant
 hardware. Their protocol requires preparing two copies of the Gibbs
 state via dissipative Lindbladian evolution and performing a SWAP
 test, using only $2\lceil\log_2 n_k\rceil$ system qubits and a single
-ancilla---matching the logarithmic qubit scaling of QPE-based methods.
+ancilla in the SWAP test implementation---matching the logarithmic qubit scaling of QPE-based methods.
 The dominant resource cost is the thermal state preparation time,
 which inherits an inverse dependence on the spectral gap of $\Delta_k$
 similar to QPE, and the circuit depth is governed by the Lindbladian
@@ -372,8 +375,8 @@ combinatorial optimization (MaxCut), demonstrating competitive
 solutions for $m = 7000$ variables using $n = 17$ trapped-ion qubits.
 Since its publication in Nature Communications, the framework has been
 extended to portfolio optimization~\cite{PCEportfolio25} (real-world
-S\&P~500 asset selection), the LABS problem~\cite{PCElabs25} ($N = 45$
-variables with 4 qubits), and budget-constrained cut
+S\&P~500 asset selection), the LABS problem~\cite{PCElabs25} (instances up to $N = 45$
+variables), and budget-constrained cut
 problems~\cite{PCEbudget25}. IBM Quantum has published a tutorial
 implementation~\cite{IBMpce}.
 
@@ -391,7 +394,7 @@ TDA has been applied to financial market analysis by several
 groups~\cite{GK18, Otter17}. Gidea and Katz~\cite{GK18} demonstrated
 that persistent homology features of time-delay embedded S\&P~500 data
 exhibit sharp transitions preceding the 2008 crash, with early warning
-signals appearing weeks before the crash onset. Subsequent work has
+signals apparent months to over a year before the crash onset. Subsequent work has
 shown that persistence-based features provide complementary
 information to standard volatility measures for regime classification
 and crash forecasting. Our pipeline builds on this classical
@@ -919,10 +922,11 @@ and jumps to ${\approx}3.0$ when no further null vector exists
 (Fig.~\ref{fig:pce_toy_convergence}).
 
 The deflation protocol correctly recovers $\beta_1 \in \{1,2,3\}$ on
-synthetic Laplacians ($3/3$), but fails at $\beta_1 = 4$, where the
-optimizer converges to a local minimum returning
-$\tilde{\beta}_1 = 3$. This represents a known limitation of
-gradient-free optimization for higher-multiplicity null spaces. A
+synthetic Laplacians ($3/3$). In the $\beta_1=4$ regime, recovery is
+parameter-sensitive rather than uniformly failing: expanded sweeps
+recover all four null vectors in most settings, but performance
+degrades under stronger penalties. This indicates a known sensitivity
+of gradient-free optimization for higher-multiplicity null spaces. A
 loop-preserving subsampled benchmark on the real market peak window
 (window~167, $\beta_1^{\text{full}}=22$, $n_k^{\text{full}}=267$)
 remains future work; we therefore make no claim about recovered-loop
@@ -930,17 +934,17 @@ ratios on real market Laplacians in this manuscript. Scaling beyond
 toy validation to the full $\beta_1 \leq 22$ regime remains an open
 engineering task and a central direction for future work.
 
-To better characterize the $\beta_1=4$ failure mode, we ran a targeted
-toy sweep over deflation penalty $\mu \in \{3,5,8\}$ and ansatz depth
-($L\in\{8,12\}$) on a four-cycle benchmark
+To better characterize the $\beta_1=4$ behavior, we ran a targeted
+toy sweep over deflation penalty $\mu \in \{1,3,5,8\}$ and ansatz depth
+($L\in\{8,12,16\}$) on a four-cycle benchmark
 (\texttt{3\_Results/deflation\_failure\_analysis.json}). Across seeds,
-the mean recovered count is 3.33--3.67 of 5 attempted rounds, with
-failure-to-reach-4 rates of 33\%--67\%. Increasing $\mu$ to 8 worsens
-recovery (higher failure rate), consistent with over-penalization that
-creates optimization barriers before the 4th null mode is reached. This
-supports the interpretation that the dominant issue is optimization
-landscape/penalty tuning rather than an immediate expressivity wall at
-the tested ansatz sizes.
+the mean recovered count is 3.875--4.0 of 5 attempted rounds, with
+failure-to-reach-4 rates of 0\%--12.5\%. For $\mu \in \{1,3,5\}$, all
+tested seeds recover the first four null vectors; increasing $\mu$ to 8
+introduces occasional misses, consistent with over-penalization that
+creates optimization barriers. This supports the interpretation that the
+dominant issue is optimization landscape/penalty tuning rather than an
+immediate expressivity wall at the tested ansatz sizes.
 
 \begin{figure}[t]
   \centering
@@ -1375,7 +1379,7 @@ Future work includes:
 % ============================================================
 
 The S\&P~500 dataset, pipeline code, and PCE-VQE simulation scripts
-are available at \url{https://github.com/arulrhikm/qtda-pce}.
+are available at \url{https://github.com/arulrhikm/Quantum-Market-Crash-TDA}.
 
 % ============================================================
 \section*{Acknowledgment}
