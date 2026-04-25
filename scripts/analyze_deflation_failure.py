@@ -2,7 +2,7 @@
 Analyze deflation failure at beta1=4 (toy case).
 
 Writes:
-  3_Results/deflation_failure_analysis.json
+  results/deflation_failure_analysis.json
 """
 
 import json
@@ -11,8 +11,8 @@ import numpy as np
 from scipy.optimize import minimize
 
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(ROOT, "3_Results", "deflation_failure_analysis.json")
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+OUT = os.path.join(ROOT, "results", "deflation_failure_analysis.json")
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 
 

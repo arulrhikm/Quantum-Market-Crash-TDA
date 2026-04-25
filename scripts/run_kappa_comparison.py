@@ -2,7 +2,7 @@
 E4: kappa=2 vs kappa=3 comparison on n_k=64, beta1=2 benchmark.
 
 Writes:
-  3_Results/kappa_comparison.json
+  results/kappa_comparison.json
 """
 
 import json
@@ -11,8 +11,8 @@ import numpy as np
 from scipy.optimize import minimize
 
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(ROOT, "3_Results", "kappa_comparison.json")
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+OUT = os.path.join(ROOT, "results", "kappa_comparison.json")
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 
 

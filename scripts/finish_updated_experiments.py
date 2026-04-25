@@ -2,11 +2,11 @@
 Run remaining paper-finishing experiments (E1, E1b, E6, E7).
 
 Outputs:
-  - 3_Results/classification_chronological.json
-  - 3_Results/classification_ood.json
-  - 3_Results/hardware_estimate.json
-  - 3_Results/hyperparameters.json
-  - Figures/fig_roc_classification_split.png
+  - results/classification_chronological.json
+  - results/classification_ood.json
+  - results/hardware_estimate.json
+  - results/hyperparameters.json
+  - images/figure_06_classification_roc_split.png
   - REPRODUCE.md
 """
 
@@ -37,9 +37,9 @@ from qiskit.transpiler import CouplingMap
 from qiskit import transpile
 
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
-RESULTS_DIR = os.path.join(ROOT, "3_Results")
-FIG_DIR = os.path.join(ROOT, "Figures")
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+RESULTS_DIR = os.path.join(ROOT, "results")
+FIG_DIR = os.path.join(ROOT, "images")
 os.makedirs(RESULTS_DIR, exist_ok=True)
 os.makedirs(FIG_DIR, exist_ok=True)
 
@@ -122,7 +122,7 @@ def run_e1():
         v = json.load(f)
     beta1 = np.array(v["beta1_all_ce"], dtype=float)
 
-    df = pd.read_csv(os.path.join(ROOT, "sp500_2003_2010.csv"), parse_dates=["Date"])
+    df = pd.read_csv(os.path.join(ROOT, "data", "sp500_2003_2010.csv"), parse_dates=["Date"])
     prices = df["Close"].to_numpy()
     dates = pd.to_datetime(df["Date"], utc=True).dt.tz_convert(None)
     log_ret = np.diff(np.log(prices))
@@ -176,7 +176,7 @@ def run_e1():
     ax.legend(fontsize=8)
     ax.grid(alpha=0.2)
     fig.tight_layout()
-    fig.savefig(os.path.join(FIG_DIR, "fig_roc_classification_split.png"), dpi=300)
+    fig.savefig(os.path.join(FIG_DIR, "figure_06_classification_roc_split.png"), dpi=300)
     plt.close(fig)
 
     with open(os.path.join(RESULTS_DIR, "classification_chronological.json"), "w", encoding="utf-8") as f:
@@ -311,21 +311,21 @@ def run_e7(ch, ood, hw):
     reproduce = """# Reproduce Key Paper Outputs
 
 ## Core verification
-- `python verify_paper_claims.py`
-- Output: `3_Results/verification_results.json`
+- `python scripts/verify_paper_claims.py`
+- Output: `results/verification_results.json`
 
 ## Figure generation
-- `python generate_figures.py`
-- Outputs: `Figures/fig_*.png`
+- `python scripts/generate_figures.py`
+- Outputs: `images/figure_*.png`
 
 ## Finishing experiments (E1, E1b, E6, E7)
-- `python finish_updated_experiments.py`
+- `python scripts/finish_updated_experiments.py`
 - Outputs:
-  - `3_Results/classification_chronological.json`
-  - `3_Results/classification_ood.json`
-  - `3_Results/hardware_estimate.json`
-  - `3_Results/hyperparameters.json`
-  - `Figures/fig_roc_classification_split.png`
+  - `results/classification_chronological.json`
+  - `results/classification_ood.json`
+  - `results/hardware_estimate.json`
+  - `results/hyperparameters.json`
+  - `images/figure_06_classification_roc_split.png`
 """
     with open(os.path.join(ROOT, "REPRODUCE.md"), "w", encoding="utf-8") as f:
         f.write(reproduce)

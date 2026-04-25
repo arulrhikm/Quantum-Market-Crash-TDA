@@ -410,7 +410,7 @@ Betti numbers through four stages (Fig.~\ref{fig:pipeline}).
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{Figures/fig_pipeline.png}
+  \includegraphics[width=\columnwidth]{images/figure_01_pipeline_overview.png}
   \caption{Overview of the qTDA pipeline with PCE qubit compression:
     (1)~S\&P~500 log returns $\to$ Takens embedding ($\tau=13$, $m=4$)
     $\to$ point cloud in $\mathbb{R}^4$;
@@ -500,7 +500,7 @@ distance distribution and choosing the $\varepsilon$ that maximizes a
 robust central tendency (median) of $\beta_1$ across windows, with a
 stability tie-break toward smaller $\varepsilon$. This yields
 $\varepsilon^* = 0.32$ for the 2007--2010 dataset (recorded in
-\texttt{3\_Results/verification\_results.json}).
+\texttt{results/verification\_results.json}).
 
 \subsection{Step 3: PCE Encoding of the Spectral Problem}
 \label{sec:pce_encoding}
@@ -710,7 +710,7 @@ filtration scale $\varepsilon^*$ (the scale of maximal $\beta_1$
 persistence), we find $n_1\in[31,\,429]$ (mean 136, median 116),
 leading to eigendecomposition times of approximately $41$~ms to
 $228$~ms per window (mean $\approx 89$~ms) on a single CPU core in the
-current reference run (\texttt{3\_Results/verification\_results.json}).
+current reference run (\texttt{results/verification\_results.json}).
 The total pipeline runtime for all 190 windows is approximately
 $25.5$~seconds.
 
@@ -901,7 +901,7 @@ provides a leading indicator of systemic stress~\cite{GK18}.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{Figures/fig_beta1_main_final.png}
+  \includegraphics[width=\columnwidth]{images/figure_02_beta1_timeseries.png}
   \caption{First Betti number $\beta_1$ over 190 sliding windows
     (2003--2010). Vertical lines mark Bear Stearns (14~Mar.\ 2008,
     dotted) and Lehman Brothers (15~Sep.\ 2008, dashed).
@@ -937,7 +937,7 @@ engineering task and a central direction for future work.
 To better characterize the $\beta_1=4$ behavior, we ran a targeted
 toy sweep over deflation penalty $\mu \in \{1,3,5,8\}$ and ansatz depth
 ($L\in\{8,12,16\}$) on a four-cycle benchmark
-(\texttt{3\_Results/deflation\_failure\_analysis.json}). Across seeds,
+(\texttt{results/deflation\_failure\_analysis.json}). Across seeds,
 the mean recovered count is 3.875--4.0 of 5 attempted rounds, with
 failure-to-reach-4 rates of 0\%--12.5\%. For $\mu \in \{1,3,5\}$, all
 tested seeds recover the first four null vectors; increasing $\mu$ to 8
@@ -948,7 +948,7 @@ immediate expressivity wall at the tested ansatz sizes.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{Figures/fig_pce_toy_convergence.png}
+  \includegraphics[width=\columnwidth]{images/figure_03_pce_toy_convergence.png}
   \caption{PCE-VQE convergence on six toy Laplacians (6/6 correct).
     Loss near $10^{-10}$ signals a null vector; jump to ${\approx}3.0$
     signals termination.}
@@ -1074,7 +1074,7 @@ simulation provides the tightest available comparison.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{Figures/fig_noise_robustness.png}
+  \includegraphics[width=\columnwidth]{images/figure_04_noise_robustness.png}
   \caption{Noise robustness: PCE-VQE accuracy (measured, blue, $n=6$
   qubits, $n_k \approx 63$) vs.\ LGZ-QPE at $n_k = 16$ (measured,
   red solid) and analytical extrapolation (red dashed). PCE maintains
@@ -1113,7 +1113,7 @@ not claim this as proof of asymptotic behavior.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{Figures/fig_barren_plateau.png}
+  \includegraphics[width=\columnwidth]{images/figure_05_barren_plateau.png}
   \caption{Gradient variance vs.\ $n$ for $j = 0, 1, 2$ deflation
   rounds (500 initializations, $n = 4,6,8,10,12,14,16$).
   Non-negative power-law slopes indicate non-vanishing gradients
@@ -1177,7 +1177,7 @@ Episode & Precision & Recall & $F_1$ & ROC AUC \\
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{Figures/fig_roc_classification_split.png}
+  \includegraphics[width=\columnwidth]{images/figure_06_classification_roc_split.png}
   \caption{ROC curves for the $\beta_1$ classifier and volatility
   proxy under the chronological train/test split. Training curves
   (dashed) show in-sample performance on 2003--2006; test curves

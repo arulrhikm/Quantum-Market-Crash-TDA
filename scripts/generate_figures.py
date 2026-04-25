@@ -1,14 +1,14 @@
 """
 Generate all figures for paper.tex from verified data and simulations.
-Outputs to Figures/ directory.
+Outputs to images/ directory.
 
 Figures:
-  1. fig_pipeline.png           — Pipeline overview (conceptual)
-  2. fig_beta1_main_final.png   — beta_1 across 190 sliding windows
-  3. fig_pce_toy_convergence.png — PCE-VQE convergence on 6 toy Laplacians
-  4. fig_noise_robustness.png   — PCE vs LGZ-QPE noise robustness
-  5. fig_barren_plateau.png     — Gradient variance vs n (BP analysis)
-  6. fig_roc_classification.png — ROC curve for crash classification
+  1. figure_01_pipeline_overview.png
+  2. figure_02_beta1_timeseries.png
+  3. figure_03_pce_toy_convergence.png
+  4. figure_04_noise_robustness.png
+  5. figure_05_barren_plateau.png
+  6. figure_legacy_roc_full.png
 """
 
 import numpy as np
@@ -23,7 +23,8 @@ import json, os, warnings, time
 warnings.filterwarnings('ignore')
 
 GLOBAL_SEED = 42
-OUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Figures')
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+OUT_DIR = os.path.join(ROOT, 'images')
 os.makedirs(OUT_DIR, exist_ok=True)
 
 # IEEE two-column style
@@ -44,16 +45,14 @@ plt.rcParams.update({
 # ─────────────────────────────────────────────────────────────────────────
 # Load verified data
 # ─────────────────────────────────────────────────────────────────────────
-DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                        '3_Results')
+DATA_DIR = os.path.join(ROOT, 'results')
 
 with open(os.path.join(DATA_DIR, 'verification_results.json')) as f:
     vdata = json.load(f)
 
 # Also load the S&P 500 date index for window-to-date mapping
 import pandas as pd
-csv_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                        'sp500_2003_2010.csv')
+csv_path = os.path.join(ROOT, 'data', 'sp500_2003_2010.csv')
 sp_df = pd.read_csv(csv_path, parse_dates=['Date'], index_col='Date')
 # Normalize index to robust datetime type across pandas/Colab versions.
 sp_dates = pd.to_datetime(sp_df.index, errors='coerce', utc=True)
@@ -697,20 +696,20 @@ if __name__ == '__main__':
 
     # 1. Pipeline diagram
     print("\n[1/6] Pipeline diagram")
-    fig_pipeline(os.path.join(OUT_DIR, 'fig_pipeline.png'))
+    fig_pipeline(os.path.join(OUT_DIR, 'figure_01_pipeline_overview.png'))
 
     # 2. beta_1 main time series
     print("\n[2/6] beta_1 main time series")
-    fig_beta1_main(os.path.join(OUT_DIR, 'fig_beta1_main_final.png'))
+    fig_beta1_main(os.path.join(OUT_DIR, 'figure_02_beta1_timeseries.png'))
 
     # 3. PCE-VQE toy convergence
     print("\n[3/6] PCE-VQE toy convergence (running simulations...)")
     toy_results = fig_pce_toy_convergence(
-        os.path.join(OUT_DIR, 'fig_pce_toy_convergence.png'))
+        os.path.join(OUT_DIR, 'figure_03_pce_toy_convergence.png'))
 
     # 4. Noise robustness
     print("\n[4/6] Noise robustness")
-    fig_noise_robustness(os.path.join(OUT_DIR, 'fig_noise_robustness.png'))
+    fig_noise_robustness(os.path.join(OUT_DIR, 'figure_04_noise_robustness.png'))
 
     # 5. Barren plateau
     skip_bp = os.getenv('QTDA_SKIP_BP', '0') == '1'
@@ -720,12 +719,12 @@ if __name__ == '__main__':
     else:
         print("\n[5/6] Barren plateau analysis (this may take a few minutes...)")
         bp_results = fig_barren_plateau(
-            os.path.join(OUT_DIR, 'fig_barren_plateau.png'))
+            os.path.join(OUT_DIR, 'figure_05_barren_plateau.png'))
 
     # 6. ROC classification
     print("\n[6/6] ROC classification")
     class_results = fig_roc_classification(
-        os.path.join(OUT_DIR, 'fig_roc_classification.png'))
+        os.path.join(OUT_DIR, 'figure_legacy_roc_full.png'))
 
     # Summary
     print("\n" + "=" * 65)

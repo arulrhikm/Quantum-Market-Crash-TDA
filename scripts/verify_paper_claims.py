@@ -43,7 +43,8 @@ def get_sp500_data(start="2003-01-02", end="2010-12-31"):
         df.index = dt
         return df
 
-    cache = os.path.join(os.path.dirname(__file__), "sp500_2003_2010.csv")
+    project_root = os.path.dirname(os.path.dirname(__file__))
+    cache = os.path.join(project_root, "data", "sp500_2003_2010.csv")
     if os.path.exists(cache):
         df = pd.read_csv(cache, parse_dates=["Date"], index_col="Date")
         df = _normalize_datetime_index(df)
@@ -451,7 +452,8 @@ def run_full_pipeline():
         "beta0_all_rip": beta0_rip.tolist(),
     }
 
-    out_path = os.path.join(os.path.dirname(__file__), "3_Results", "verification_results.json")
+    project_root = os.path.dirname(os.path.dirname(__file__))
+    out_path = os.path.join(project_root, "results", "verification_results.json")
     with open(out_path, "w") as f:
         json.dump(results, f, indent=2)
     print(f"\nResults saved to {out_path}")

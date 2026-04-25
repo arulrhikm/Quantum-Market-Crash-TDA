@@ -5,7 +5,7 @@ This uses the same coefficient-space surrogate loss family as the
 finishing scripts to produce an executable finite-size extension.
 
 Writes:
-  3_Results/barren_plateau_extended.json
+  results/barren_plateau_extended.json
 """
 
 import json
@@ -13,8 +13,8 @@ import os
 import numpy as np
 
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(ROOT, "3_Results", "barren_plateau_extended.json")
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+OUT = os.path.join(ROOT, "results", "barren_plateau_extended.json")
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 
 
